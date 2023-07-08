@@ -20,5 +20,14 @@ spec:
         kind: HelmRepository
         name: aws-ebs-csi-driver
       version: 2.20.0
-  targetNamespace: kube-system
-  interval: 1m0s
+  values:
+storageClasses: 
+  - name: ebs-sc
+    annotations:
+      storageclass.kubernetes.io/is-default-class: "true"
+    volumeBindingMode: WaitForFirstConsumer
+    reclaimPolicy: Delete
+    parameters:
+      encrypted: "false"
+    targetNamespace: kube-system
+    interval: 1m0s
