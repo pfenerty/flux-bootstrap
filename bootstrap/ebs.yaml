@@ -21,7 +21,7 @@ spec:
         name: aws-ebs-csi-driver
       version: 2.20.0
   values:
-    storageClasses: 
+    storageClasses:
       - name: ebs-sc
         annotations:
           storageclass.kubernetes.io/is-default-class: "true"
@@ -29,5 +29,5 @@ spec:
         reclaimPolicy: Delete
         parameters:
           encrypted: "false"
-        targetNamespace: kube-system
-        interval: 1m0s
+  targetNamespace: kube-system
+  interval: 1m0s
