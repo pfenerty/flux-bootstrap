@@ -39,6 +39,7 @@ spec:
   interval: 5m
   path: "./linkerd"
   prune: true
+  wait: true
   sourceRef:
     kind: GitRepository
     name: flux-system
