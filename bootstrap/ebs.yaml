@@ -18,7 +18,7 @@ spec:
       chart: aws-ebs-csi-driver
       sourceRef:
         kind: HelmRepository
-        name: jetstack
+        name: aws-ebs-csi-driver
       version: 2.20.0
   targetNamespace: kube-system
   interval: 1m0s
