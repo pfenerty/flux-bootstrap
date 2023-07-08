@@ -36,5 +36,14 @@ spec:
         kind: HelmRepository
         name: linkerd
       version: 1.12.5
+  valuesFrom:
+    - kind: Secret
+      name: linkerd-trust-anchor
+      valuesKey: tls.crt
+      targetPath: identityTrustAnchorsPEM
+  values:
+    identity:
+      issuer:
+        scheme: kubernetes.io/tls
   targetNamespace: linkerd
   interval: 1m0s
