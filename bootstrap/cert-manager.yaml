@@ -37,7 +37,7 @@ spec:
   dependsOn:
     - name: bootstrap
   interval: 5m
-  path: "./bootstrap/linkerd"
+  path: "./linkerd"
   prune: true
   sourceRef:
     kind: GitRepository
