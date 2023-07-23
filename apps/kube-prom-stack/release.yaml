@@ -11,6 +11,17 @@ spec:
         kind: HelmRepository
         name: prometheus-community
       version: 47.4.0
+  values:
+    prometheus:
+      prometheusSpec:
+        storageSpec:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: ebs-sc
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 50Gi
   targetNamespace: monitoring
   install:
     crds: CreateReplace
