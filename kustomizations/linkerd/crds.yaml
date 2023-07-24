@@ -1,14 +1,14 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: cert-manager
+  name: linkerd-crds
   namespace: flux-system
 spec:
   force: false
   interval: 3m0s
   retryInterval: 60s
   prune: true
-  path: ./apps/apps/linkerd/crds
+  path: ./apps/linkerd/crds
   sourceRef:
     kind: GitRepository
     name: flux-system
