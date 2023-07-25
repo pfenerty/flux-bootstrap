@@ -9,6 +9,8 @@ spec:
   retryInterval: 60s
   prune: true
   path: ./apps/linkerd/cert-manager-issuers
+  dependsOn:
+    - name: cert-manager
   sourceRef:
     kind: GitRepository
     name: flux-system

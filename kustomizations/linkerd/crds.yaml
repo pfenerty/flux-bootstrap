@@ -9,6 +9,8 @@ spec:
   retryInterval: 60s
   prune: true
   path: ./apps/linkerd/crds
+  dependsOn:
+    - name: linkerd-repo
   sourceRef:
     kind: GitRepository
     name: flux-system
