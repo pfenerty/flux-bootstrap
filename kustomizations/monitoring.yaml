@@ -11,6 +11,7 @@ spec:
   path: ./apps/kube-prom-stack
   dependsOn:
     - name: aws-ebs-csi-driver
+    - name: linkerd-control-plane
   healthChecks:
     - apiVersion: apps/v1
       kind: DaemonSet
