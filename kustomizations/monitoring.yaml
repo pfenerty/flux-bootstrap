@@ -8,9 +8,10 @@ spec:
   interval: 3m0s
   retryInterval: 60s
   prune: true
-  path: ./apps/kube-prom-stack
+  path: ./apps/monitoring
   dependsOn:
     - name: aws-ebs-csi-driver
+    - name: logging
   healthChecks:
     - apiVersion: apps/v1
       kind: DaemonSet

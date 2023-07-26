@@ -22,6 +22,19 @@ spec:
               resources:
                 requests:
                   storage: 50Gi
+    grafana:
+      additionalDataSources:
+        - name: Loki
+          access: proxy
+          basicAuth: false
+          basicAuthPassword: ""
+          basicAuthUser: ""
+          editable: false
+          jsonData: {}
+          orgId: 1
+          type: loki
+          url: http://loki.logging.svc.cluster.local:3100
+          version: 1
   targetNamespace: monitoring
   install:
     crds: CreateReplace
