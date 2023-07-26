@@ -33,7 +33,7 @@ spec:
           jsonData: {}
           orgId: 1
           type: loki
-          url: http://loki.logging.svc.cluster.local:3100
+          url: http://logging-loki-stack-headless.logging.svc.cluster.local:3100
           version: 1
   targetNamespace: monitoring
   install:
