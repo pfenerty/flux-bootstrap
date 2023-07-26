@@ -11,5 +11,13 @@ spec:
         kind: HelmRepository
         name: grafana
       version: 2.9.10
+  values:
+    loki:
+      write:
+        persistence:
+          storageClass: ebs-sc
+    promtail:
+      serviceMonitor:
+        enabled: true
   targetNamespace: logging
   interval: 1m0s
