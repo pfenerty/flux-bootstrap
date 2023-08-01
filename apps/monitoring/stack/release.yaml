@@ -37,5 +37,5 @@ spec:
           version: 1
   targetNamespace: monitoring
   install:
-    crds: CreateReplace
+    crds: Skip
   interval: 1m0s

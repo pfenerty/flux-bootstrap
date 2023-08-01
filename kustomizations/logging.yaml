@@ -17,7 +17,7 @@ spec:
       name: logging-loki-stack
       namespace: logging
     - apiVersion: apps/v1
-      kind: Deployment
+      kind: DaemonSet
       name: logging-loki-stack-promtail
       namespace: logging
   sourceRef:
