@@ -9,6 +9,6 @@ spec:
       chart: kube-prometheus-stack
       sourceRef:
         kind: HelmRepository
-        name: prometheus-operator-crds
+        name: prometheus-community
       version: 5.0.0
   interval: 1m0s
