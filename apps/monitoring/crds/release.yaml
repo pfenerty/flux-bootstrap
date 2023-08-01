@@ -6,7 +6,7 @@ metadata:
 spec:
   chart:
     spec:
-      chart: kube-prometheus-stack
+      chart: prometheus-operator-crds
       sourceRef:
         kind: HelmRepository
         name: prometheus-community
