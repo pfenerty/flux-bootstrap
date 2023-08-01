@@ -11,5 +11,4 @@ spec:
         kind: HelmRepository
         name: prometheus-operator-crds
       version: 5.0.0
-  targetNamespace: monitoring
   interval: 1m0s
