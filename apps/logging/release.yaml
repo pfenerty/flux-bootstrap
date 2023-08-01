@@ -13,8 +13,8 @@ spec:
       version: 2.9.10
   values:
     loki:
-      minio:
-        enabled: true
+      storage:
+        s3:
     promtail:
       serviceMonitor:
         enabled: true
