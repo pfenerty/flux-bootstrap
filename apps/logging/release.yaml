@@ -18,15 +18,15 @@ spec:
   valuesFrom:
     - kind: Secret
       name: loki-storage-config
-      valuesKey: loki.storage.s3.s3
-      targetPath: bucket_name
+      valuesKey: bucket_name
+      targetPath: loki.storage.s3.s3
     - kind: Secret
       name: loki-storage-config
-      valuesKey: loki.storage.s3.accessKeyId
-      targetPath: key_id
+      valuesKey: key_id
+      targetPath: loki.storage.s3.accessKeyId
     - kind: Secret
       name: loki-storage-config
-      valuesKey: loki.storage.s3.secretAccessKey
-      targetPath: access_key
+      valuesKey: access_key
+      targetPath: loki.storage.s3.secretAccessKey
   targetNamespace: logging
   interval: 1m0s
