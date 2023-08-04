@@ -28,5 +28,9 @@ spec:
       name: loki-storage-config
       valuesKey: access_key
       targetPath: loki.storage.s3.secretAccessKey
+    - kind: Secret
+      name: loki-storage-config
+      valuesKey: region
+      targetPath: loki.storage.s3.region
   targetNamespace: logging
   interval: 1m0s
