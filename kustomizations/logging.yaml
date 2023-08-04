@@ -9,8 +9,8 @@ spec:
   retryInterval: 60s
   prune: true
   path: ./apps/logging
-  dependsOn:
-    - name: monitoring-crds
+  # dependsOn:
+  #   - name: monitoring-crds
   healthChecks:
     - apiVersion: apps/v1
       kind: StatefulSet

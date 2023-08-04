@@ -11,12 +11,22 @@ spec:
         kind: HelmRepository
         name: grafana
       version: 2.9.10
-  values:
-    loki:
-      storage:
-        s3:
-    promtail:
-      serviceMonitor:
-        enabled: true
+  # values:
+  #   promtail:
+  #     serviceMonitor:
+  #       enabled: true
+  valuesFrom:
+    - kind: Secret
+      name: loki-storage-config
+      valuesKey: loki.storage.s3.s3
+      targetPath: bucket_name
+    - kind: Secret
+      name: loki-storage-config
+      valuesKey: loki.storage.s3.accessKeyId
+      targetPath: key_id
+    - kind: Secret
+      name: loki-storage-config
+      valuesKey: loki.storage.s3.secretAccessKey
+      targetPath: access_key
   targetNamespace: logging
   interval: 1m0s
