@@ -41,10 +41,10 @@ spec:
     - kind: Secret
       name: loki-storage-config
       valuesKey: dynamodb_url
-      targetPath: loki.storage_config.aws.dynamodb.dynamodb_url
+      targetPath: loki.loki.storage_config.aws.dynamodb.dynamodb_url
     - kind: Secret
       name: loki-storage-config
       valuesKey: s3_url
-      targetPath: loki.storage_config.aws.s3
+      targetPath: loki.loki.storage_config.aws.s3
   targetNamespace: logging
   interval: 1m0s
