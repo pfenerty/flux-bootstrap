@@ -11,16 +11,16 @@ spec:
         kind: HelmRepository
         name: grafana
       version: 2.9.10
-  values:
-  # loki:
-  #   storage_config:
-  #     aws:
-  #       s3: s3://access_key:secret_access_key@region/bucket_name
-  #       dynamodb:
-  #         dynamodb_url: dynamodb://access_key:secret_access_key@region
-  #   promtail:
-  #     serviceMonitor:
-  #       enabled: true
+  # values:
+  #   loki:
+  #     storage_config:
+  #       aws:
+  #         s3: s3://access_key:secret_access_key@region/bucket_name
+  #         dynamodb:
+  #           dynamodb_url: dynamodb://access_key:secret_access_key@region
+  #     promtail:
+  #       serviceMonitor:
+  #         enabled: true
   valuesFrom:
     - kind: Secret
       name: loki-storage-config
