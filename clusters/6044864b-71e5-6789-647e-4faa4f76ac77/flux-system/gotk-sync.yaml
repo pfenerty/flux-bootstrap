@@ -20,7 +20,7 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m0s
-  path: ./clusters/51daa298-494c-c85d-f6ff-6b705c8631c3
+  path: ./clusters/6044864b-71e5-6789-647e-4faa4f76ac77
   prune: true
   sourceRef:
     kind: GitRepository
