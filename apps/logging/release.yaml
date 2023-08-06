@@ -16,7 +16,7 @@ spec:
       config:
         schema_config:
           configs:
-          - from: 2020-05-15
+          - from: "2020-05-15"
             store: aws
             object_store: s3
             schema: v11
