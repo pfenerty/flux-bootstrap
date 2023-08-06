@@ -22,35 +22,19 @@ spec:
             schema: v11
             index:
               prefix: loki_
-        storage_config:
-          aws:
-            s3: "s3://access_key:secret_access_key@region/bucket_name"
-            dynamodb:
-              dynamodb_url: "dynamodb://access_key:secret_access_key@region"
+        # storage_config:
+        #   aws:
+        #     s3: "s3://access_key:secret_access_key@region/bucket_name"
+        #     dynamodb:
+        #       dynamodb_url: "dynamodb://access_key:secret_access_key@region"
   valuesFrom:
     - kind: Secret
       name: loki-storage-config
-      valuesKey: bucket_name
-      targetPath: loki.storage.s3.s3
-    - kind: Secret
-      name: loki-storage-config
-      valuesKey: key_id
-      targetPath: loki.storage.s3.accessKeyId
-    - kind: Secret
-      name: loki-storage-config
-      valuesKey: access_key
-      targetPath: loki.storage.s3.secretAccessKey
-    - kind: Secret
-      name: loki-storage-config
-      valuesKey: region
-      targetPath: loki.storage.s3.region
-    - kind: Secret
-      name: loki-storage-config
       valuesKey: dynamodb_url
-      targetPath: loki.storage_config.aws.dynamodb.dynamodb_url
+      targetPath: loki.config.storage_config.aws.dynamodb.dynamodb_url
     - kind: Secret
       name: loki-storage-config
       valuesKey: s3_url
-      targetPath: loki.storage_config.aws.s3
+      targetPath: loki.config.storage_config.aws.s3
   targetNamespace: logging
   interval: 1m0s
