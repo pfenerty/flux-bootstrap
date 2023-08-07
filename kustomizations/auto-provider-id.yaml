@@ -8,7 +8,7 @@ spec:
   interval: 3m0s
   retryInterval: 60s
   prune: true
-  path: ./apps/auto-provider-id
+  path: ./apps/aws-auto-provider-id
   # healthChecks:
   #   - apiVersion: apps/v1
   #     kind: Deployment
