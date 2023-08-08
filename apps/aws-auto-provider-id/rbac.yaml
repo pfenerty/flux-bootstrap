@@ -38,7 +38,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: node-watcher
-  namespace: default
+  namespace: kube-system
 roleRef:
   kind: ClusterRole
   name: node-watcher
@@ -51,7 +51,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: node-labeler
-  namespace: default
+  namespace: kube-system
 roleRef:
   kind: ClusterRole
   name: node-labeler
