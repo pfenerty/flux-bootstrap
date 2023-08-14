@@ -9,11 +9,11 @@ spec:
   retryInterval: 60s
   prune: true
   path: ./apps/aws-auto-provider-id
-  # healthChecks:
-  #   - apiVersion: apps/v1
-  #     kind: Deployment
-  #     name: cert-manager-cert-manager
-  #     namespace: cert-manager
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: auto-provider-id
+      namespace: auto-provider-id
   sourceRef:
     kind: GitRepository
     name: flux-system

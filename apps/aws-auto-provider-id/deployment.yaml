@@ -1,26 +1,31 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: k8s-node-labeler
-  namespace: kube-system
+  name: auto-provider-id
+  namespace: auto-provider-id
   labels:
-    app: k8s-node-labeler
+    app: auto-provider-id
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: k8s-node-labeler
+      app: auto-provider-id
   template:
     metadata:
       labels:
-        app: k8s-node-labeler
+        app: auto-provider-id
     spec:
       serviceAccountName: node-watcher
       containers:
-      - name: node-labeler
-        image: pfenerty/k8s-node-labeler:latest
+      - name: operator
+        image: pfenerty/auto-provider-id:latest
         command: ["/app"]
         args: ["operator"]
+        env:
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
         resources:
           requests:
             memory: "64Mi"
