@@ -1,6 +1,9 @@
 resources:
   - cert-manager.yaml
-  # - ebs.yaml
+  - auto-provider-id.yaml
+  - cloud-controller.yaml
+  - cluster-autoscaler.yaml
+  - ebs.yaml
   - monitoring/
   - logging.yaml
   - linkerd/

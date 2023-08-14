@@ -9,6 +9,8 @@ spec:
   retryInterval: 60s
   prune: true
   path: ./apps/aws-ebs-csi-driver
+  dependsOn:
+    - name: aws-cloud-controller
   healthChecks:
     - apiVersion: apps/v1
       kind: DaemonSet
