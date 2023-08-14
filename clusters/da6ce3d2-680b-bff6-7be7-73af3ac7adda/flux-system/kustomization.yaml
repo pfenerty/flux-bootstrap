@@ -8,7 +8,46 @@ patches:
       apiVersion: apps/v1
       kind: Deployment
       metadata:
-        name: all
+        name: helm-controller
+      spec:
+        template:
+          spec:
+            tolerations:
+              - key: "node.cloudprovider.kubernetes.io/uninitialized"
+                operator: "Equal"
+                value: "true"
+                effect: "NoSchedule"
+  - patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: kustomize-controller
+      spec:
+        template:
+          spec:
+            tolerations:
+              - key: "node.cloudprovider.kubernetes.io/uninitialized"
+                operator: "Equal"
+                value: "true"
+                effect: "NoSchedule"
+  - patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: notification-controller
+      spec:
+        template:
+          spec:
+            tolerations:
+              - key: "node.cloudprovider.kubernetes.io/uninitialized"
+                operator: "Equal"
+                value: "true"
+                effect: "NoSchedule"
+  - patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: source-controller
       spec:
         template:
           spec:
