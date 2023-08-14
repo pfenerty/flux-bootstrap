@@ -11,11 +11,11 @@ spec:
   path: ./apps/cluster-autoscaler
   dependsOn:
     - name: aws-cloud-controller
-  # healthChecks:
-  #   - apiVersion: apps/v1
-  #     kind: Deployment
-  #     name: cert-manager-cert-manager
-  #     namespace: cert-manager
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: kube-system-cluster-autoscaler-aws-cluster-autoscaler
+      namespace: kube-system
   sourceRef:
     kind: GitRepository
     name: flux-system
