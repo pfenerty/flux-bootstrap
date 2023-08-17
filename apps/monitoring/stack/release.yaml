@@ -12,6 +12,10 @@ spec:
         name: prometheus-community
       version: 47.4.0
   values:
+    prometheusOperator:
+      namesapces:
+        additional:
+          - kube-system
     prometheus:
       prometheusSpec:
         storageSpec:

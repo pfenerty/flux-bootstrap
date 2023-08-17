@@ -1,0 +1,66 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: cilium
+  namespace: flux-system
+spec:
+  chart:
+    spec:
+      chart: cilium
+      sourceRef:
+        kind: HelmRepository
+        name: cilium
+      version: 1.14.0
+  values:
+    ipam:
+      mode: kubernetes
+    securityContext:
+      privileged: true
+    kubeProxyReplacement: strict
+    k8sServicePort: 443
+    encryption:
+      enabled: true
+      type: wireguard
+      strictMode:
+        enabled: true
+    hubble:
+      relay:
+        enabled: true
+        prometheus:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+      ui:
+        enabled: true
+      tls:
+        auto:
+          method: certmanager
+          certManagerIssuerRef:
+            group: cert-manager.io
+            kind: Issuer
+            name: hubble-issuer
+      metrics:
+        enabled: "{dns:query;ignoreAAAA,drop,tcp,flow,icmp,http}"
+        serviceMonitor:
+          enabled: true
+        dashboards:
+          enabled: true
+    ingressController:
+      enabled: true
+      default: true
+    prometheus:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+    operator:
+      prometheus:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+  valuesFrom:
+    - kind: Secret
+      name: aws-loadbalancer-config
+      valuesKey: dns_name
+      targetPath: k8sServiceHost
+  targetNamespace: kube-system
+  interval: 1m0s
