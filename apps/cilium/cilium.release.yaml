@@ -10,7 +10,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: cilium
-      version: 1.14.0
+      version: 1.14.1
   values:
     ipam:
       mode: kubernetes
