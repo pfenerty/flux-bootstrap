@@ -1,0 +1,32 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: cluster-autoscaler
+  namespace: flux-system
+spec:
+  chart:
+    spec:
+      chart: cluster-autoscaler
+      sourceRef:
+        kind: HelmRepository
+        name: cluster-autoscaler
+      version: 9.29.1
+  valuesFrom:
+    - kind: Secret
+      name: cluster-autoscaler-config
+      valuesKey: cluster-name
+      targetPath: autoDiscovery.clusterName
+    - kind: Secret
+      name: cluster-autoscaler-config
+      valuesKey: access-key-id
+      targetPath: awsAccessKeyID
+    - kind: Secret
+      name: cluster-autoscaler-config
+      valuesKey: secret-access-key
+      targetPath: awsSecretAccessKey
+    - kind: Secret
+      name: cluster-autoscaler-config
+      valuesKey: region
+      targetPath: awsRegion
+  targetNamespace: kube-system
+  interval: 1m0s

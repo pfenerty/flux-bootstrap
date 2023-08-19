@@ -1,0 +1,11 @@
+resources:
+  - cert-manager.yaml
+  - auto-provider-id.yaml
+  - cloud-controller.yaml
+  - cluster-autoscaler.yaml
+  - cilium.yaml
+  # - metrics-server.yaml
+  - ebs.yaml
+  - monitoring/
+  - logging.yaml
+  - linkerd/

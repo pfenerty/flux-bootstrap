@@ -1,0 +1,45 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: kube-prometheus-stack
+  namespace: flux-system
+spec:
+  chart:
+    spec:
+      chart: kube-prometheus-stack
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+      version: 47.4.0
+  values:
+    # prometheusOperator:
+    #   namespaces:
+    #     additional:
+    #       - kube-system
+    prometheus:
+      prometheusSpec:
+        storageSpec:
+          volumeClaimTemplate:
+            spec:
+              storageClassName: ebs-sc
+              accessModes: ["ReadWriteOnce"]
+              resources:
+                requests:
+                  storage: 50Gi
+    grafana:
+      additionalDataSources:
+        - name: Loki
+          access: proxy
+          basicAuth: false
+          basicAuthPassword: ""
+          basicAuthUser: ""
+          editable: false
+          jsonData: {}
+          orgId: 1
+          type: loki
+          url: http://logging-loki-stack-headless.logging.svc.cluster.local:3100
+          version: 1
+  targetNamespace: monitoring
+  install:
+    crds: Skip
+  interval: 1m0s
