@@ -33,12 +33,13 @@ spec:
       ui:
         enabled: true
       tls:
-        auto:
-          method: certmanager
-          certManagerIssuerRef:
-            group: cert-manager.io
-            kind: Issuer
-            name: hubble-issuer
+        enabled: true
+        # auto:
+        #   method: certmanager
+        #   certManagerIssuerRef:
+        #     group: cert-manager.io
+        #     kind: ClusterIssuer
+        #     name: hubble-issuer
       metrics:
         enabled: [dns:query;ignoreAAAA,drop,tcp,flow,icmp,http]
         serviceMonitor:
