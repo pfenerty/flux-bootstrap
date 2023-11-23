@@ -10,6 +10,6 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: linkerd
-      version: 30.8.5
+      version: 30.12.6
   targetNamespace: linkerd
   interval: 1m0s

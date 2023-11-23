@@ -10,7 +10,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: jetstack
-      version: 1.12.2
+      version: 1.13.2
   values:
     installCRDs: true
   targetNamespace: cert-manager

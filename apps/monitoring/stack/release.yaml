@@ -10,7 +10,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: prometheus-community
-      version: 47.4.0
+      version: 54.2.1
   values:
     # prometheusOperator:
     #   namespaces:
