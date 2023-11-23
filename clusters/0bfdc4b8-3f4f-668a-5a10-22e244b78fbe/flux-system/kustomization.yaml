@@ -36,6 +36,9 @@ patches:
                 operator: "Equal"
                 value: "true"
                 effect: "NoSchedule"
+              - key: "node-role.kubernetes.io/control-plane"
+                operator: "Exists"
+                effect: "NoSchedule"
     target:
       kind: Deployment
       labelSelector: app.kubernetes.io/part-of=flux
@@ -52,6 +55,9 @@ patches:
                 operator: "Equal"
                 value: "true"
                 effect: "NoSchedule"
+              - key: "node-role.kubernetes.io/control-plane"
+                operator: "Exists"
+                effect: "NoSchedule"
     target:
       kind: Deployment
       labelSelector: app.kubernetes.io/part-of=flux
@@ -67,6 +73,9 @@ patches:
               - key: "node.cloudprovider.kubernetes.io/uninitialized"
                 operator: "Equal"
                 value: "true"
+                effect: "NoSchedule"
+              - key: "node-role.kubernetes.io/control-plane"
+                operator: "Exists"
                 effect: "NoSchedule"
     target:
       kind: Deployment
