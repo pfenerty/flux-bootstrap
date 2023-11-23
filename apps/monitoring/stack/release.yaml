@@ -18,6 +18,9 @@ spec:
     #       - kube-system
     prometheus:
       prometheusSpec:
+        serviceMonitorSelectorNilUsesHelmValues: false
+        serviceMonitorSelector: {}
+        serviceMonitorNamespaceSelector: {}
         storageSpec:
           volumeClaimTemplate:
             spec:
