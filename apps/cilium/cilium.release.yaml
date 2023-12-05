@@ -11,6 +11,7 @@ spec:
         kind: HelmRepository
         name: cilium
       version: 1.14.4
+  releaseName: cilium
   values:
     securityContext:
       capabilities:
