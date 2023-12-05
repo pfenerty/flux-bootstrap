@@ -11,13 +11,14 @@ spec:
         kind: HelmRepository
         name: prometheus-community
       version: 54.2.1
-  releaseName: kp-stack
+  releaseName: kube-prometheus-stack
   values:
     # prometheusOperator:
     #   namespaces:
     #     additional:
     #       - kube-system
     cleanPrometheusOperatorObjectNames: true
+    fullnameOverride: kps 
     prometheus:
       prometheusSpec:
         serviceMonitorSelectorNilUsesHelmValues: false
