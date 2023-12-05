@@ -10,8 +10,6 @@ spec:
   prune: true
   path: ./apps/monitoring/stack
   dependsOn:
-    - name: aws-ebs-csi-driver
-    # - name: logging
     - name: monitoring-namespace
     - name: monitoring-crds
     - name: prometheus-community-repo
