@@ -12,10 +12,30 @@ spec:
         name: cilium
       version: 1.14.4
   values:
+    securityContext:
+      capabilities:
+        ciliumAgent:
+          - CHOWN
+          - KILL
+          - NET_ADMIN
+          - NET_RAW
+          - IPC_LOCK
+          - SYS_ADMIN
+          - SYS_RESOURCE
+          - DAC_OVERRIDE
+          - FOWNER
+          - SETGID
+          - SETUID
+        cleanCiliumState:
+          - NET_ADMIN
+          - SYS_ADMIN
+          - SYS_RESOURCE
+    cgroup:
+      autoMount:
+        enabled: false
+      hostRoot: /sys/fs/cgroup
     ipam:
       mode: kubernetes
-    securityContext:
-      privileged: true
     kubeProxyReplacement: strict
     k8sServicePort: 443
     encryption:
@@ -60,8 +80,8 @@ spec:
           enabled: true
   valuesFrom:
     - kind: Secret
-      name: aws-loadbalancer-config
-      valuesKey: dns_name
+      name: k8s-host
+      valuesKey: host
       targetPath: k8sServiceHost
   targetNamespace: kube-system
   interval: 1m0s
