@@ -1,0 +1,23 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: logging
+  namespace: flux-system
+spec:
+  force: false
+  interval: 3m0s
+  retryInterval: 60s
+  prune: true
+  path: ./apps/logging
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: StatefulSet
+      name: logging-loki-stack
+      namespace: logging
+    - apiVersion: apps/v1
+      kind: DaemonSet
+      name: logging-loki-stack-promtail
+      namespace: logging
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
