@@ -11,6 +11,7 @@ spec:
         kind: HelmRepository
         name: prometheus-community
       version: 54.2.1
+  releaseName: kp-stack
   values:
     # prometheusOperator:
     #   namespaces:
