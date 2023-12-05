@@ -17,6 +17,7 @@ spec:
     #   namespaces:
     #     additional:
     #       - kube-system
+    cleanPrometheusOperatorObjectNames: true
     prometheus:
       prometheusSpec:
         serviceMonitorSelectorNilUsesHelmValues: false
