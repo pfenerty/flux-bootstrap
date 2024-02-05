@@ -41,8 +41,8 @@ spec:
     encryption:
       enabled: true
       type: wireguard
-      strictMode:
-        enabled: true
+      # strictMode:
+      #   enabled: true
     hubble:
       relay:
         enabled: true
