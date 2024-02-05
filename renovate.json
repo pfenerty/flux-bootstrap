@@ -1,8 +1,8 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json"
-  {
-    "flux": {
-      "fileMatch": ["apps/\\.yaml$"]
-    }
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "flux": {
+    "fileMatch": [
+      "apps/\\.yaml$"
+    ]
   }
 }
