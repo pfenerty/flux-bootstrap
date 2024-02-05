@@ -3,7 +3,7 @@
   "flux": {
     "fileMatch": ["apps/.+\\.yaml$"]
   },
-  "branchConcurrentLimit": 0,
-  "prConcurrentLimit": 0,
+  "branchConcurrentLimit": -1,
+  "prConcurrentLimit": -1,
   "automerge": true
 }
