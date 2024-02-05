@@ -4,5 +4,6 @@
     "fileMatch": ["apps/.+\\.yaml$"]
   },
   "branchConcurrentLimit": 0,
-  "prConcurrentLimit": 0
+  "prConcurrentLimit": 0,
+  "automerge": true
 }
