@@ -39,7 +39,7 @@ spec:
       mode: kubernetes
     kubeProxyReplacement: strict
     encryption:
-      enabled: true
+      # enabled: true
       type: wireguard
       strictMode:
         enabled: true
