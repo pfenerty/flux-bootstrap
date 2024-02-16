@@ -69,6 +69,8 @@ spec:
     ingressController:
       enabled: true
       default: true
+      service:
+        type: ClusterIP
     prometheus:
       enabled: true
       serviceMonitor:
