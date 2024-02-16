@@ -67,7 +67,7 @@ spec:
         dashboards:
           enabled: true
     ingressController:
-      enabled: false
+      enabled: true
       default: true
     prometheus:
       enabled: true
