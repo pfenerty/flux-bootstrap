@@ -61,7 +61,7 @@ spec:
         #     kind: ClusterIssuer
         #     name: hubble-issuer
       metrics:
-        enabled: [dns:query;ignoreAAAA,drop,tcp,flow,icmp,http]
+        enabled: [dns:query;ignoreAAAA, drop, tcp, flow, icmp, http]
         serviceMonitor:
           enabled: true
         dashboards:
