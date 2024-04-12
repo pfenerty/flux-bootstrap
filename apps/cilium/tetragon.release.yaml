@@ -10,6 +10,6 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: cilium
-      version: 1.0.2
+      version: 1.0.3
   targetNamespace: kube-system
   interval: 1m0s
