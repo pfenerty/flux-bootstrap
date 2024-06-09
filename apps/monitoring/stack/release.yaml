@@ -10,7 +10,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: prometheus-community
-      version: 59.1.0
+      version: 60.0.2
   releaseName: kube-prometheus-stack
   values:
     # prometheusOperator:
