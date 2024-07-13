@@ -10,7 +10,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: cilium
-      version: 1.15.6
+      version: 1.15.7
   releaseName: cilium
   values:
     securityContext:
