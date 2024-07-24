@@ -37,7 +37,7 @@ spec:
       hostRoot: /sys/fs/cgroup
     ipam:
       mode: kubernetes
-    kubeProxyReplacement: strict
+    kubeProxyReplacement: true
     encryption:
       enabled: true
       type: wireguard
