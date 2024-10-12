@@ -10,7 +10,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: minio
-      version: 6.0.1
+      version: 6.0.4
   values:
     operator:
       replicaCount: 1
