@@ -10,8 +10,8 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: cilium
-      version: 1.16.0
-  releaseName: cilium
+      version: 1.16.1
+  releaseName: kube-system-cilium
   values:
     securityContext:
       capabilities:
@@ -41,8 +41,10 @@ spec:
     encryption:
       enabled: true
       type: wireguard
-      # strictMode:
-      #   enabled: true
+    k8sServiceHost: localhost
+    k8sServicePort: 7445
+    nodePort:
+      enabled: true
     hubble:
       relay:
         enabled: true
@@ -54,12 +56,6 @@ spec:
         enabled: true
       tls:
         enabled: true
-        # auto:
-        #   method: certmanager
-        #   certManagerIssuerRef:
-        #     group: cert-manager.io
-        #     kind: ClusterIssuer
-        #     name: hubble-issuer
       metrics:
         enabled: [dns:query;ignoreAAAA, drop, tcp, flow, icmp, http]
         serviceMonitor:
@@ -67,10 +63,14 @@ spec:
         dashboards:
           enabled: true
     ingressController:
-      enabled: true
-      default: true
-      # service:
-      #   type: ClusterIP
+      enabled: false
+    #   enabled: true
+    #   default: true
+    #   service:
+    #     type: NodePort
+    #     insecureNodePort: 30080
+    #     secureNodePort: 30443
+      loadBalancerMode: shared
     prometheus:
       enabled: true
       serviceMonitor:
@@ -80,14 +80,5 @@ spec:
         enabled: true
         serviceMonitor:
           enabled: true
-  valuesFrom:
-    - kind: Secret
-      name: k8s-host
-      valuesKey: host
-      targetPath: k8sServiceHost
-    - kind: Secret
-      name: k8s-host
-      valuesKey: port
-      targetPath: k8sServicePort
   targetNamespace: kube-system
   interval: 1m0s

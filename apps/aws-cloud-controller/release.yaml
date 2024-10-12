@@ -16,5 +16,7 @@ spec:
       - --v=2
       - --cloud-provider=aws
       - --configure-cloud-routes=false
+    image:
+        tag: v1.30.3
   targetNamespace: kube-system
   interval: 1m0s

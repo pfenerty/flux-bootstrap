@@ -18,14 +18,18 @@ spec:
       serviceAccountName: node-watcher
       containers:
       - name: operator
-        image: pfenerty/auto-provider-id:latest
-        command: ["/app"]
+        image: pfenerty/auto-provider-id:v0.0.1
+        command: ["/ko-app/auto-provider-id"]
         args: ["operator"]
         env:
           - name: POD_NAMESPACE
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
         resources:
           requests:
             memory: "64Mi"
