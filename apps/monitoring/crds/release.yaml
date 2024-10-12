@@ -10,5 +10,5 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: prometheus-community
-      version: 13.0.2
+      version: 15.0.0
   interval: 1m0s
