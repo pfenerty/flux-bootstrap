@@ -1,15 +1,50 @@
 ---
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
+apiVersion: batch/v1
+kind: CronJob
 metadata:
   name: renovate
-  namespace: flux-system
+  namespace: renovate
 spec:
-  force: false
-  interval: 3m0s
-  retryInterval: 60s
-  prune: true
-  path: ./apps/renovate
-  sourceRef:
-    kind: GitRepository
-    name: flux-system
+  schedule: "@hourly"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: renovate
+              image: renovate/renovate:37.172.2
+              args:
+                - "pfenerty/flux-bootstrap"
+              env:
+                - name: LOG_LEVEL
+                  value: debug
+              envFrom:
+                - secretRef:
+                    name: renovate-env
+          restartPolicy: Never
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: renovate
+  namespace: renovate
+spec:
+  schedule: "@hourly"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: renovate
+              image: renovate/renovate:37.172.2
+              args:
+                - "pfenerty/auto-provider-id"
+              env:
+                - name: LOG_LEVEL
+                  value: debug
+              envFrom:
+                - secretRef:
+                    name: renovate-env
+          restartPolicy: Never
