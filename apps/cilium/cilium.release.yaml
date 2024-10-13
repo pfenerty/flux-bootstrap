@@ -1,4 +1,4 @@
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
+apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: cilium
@@ -64,12 +64,12 @@ spec:
           enabled: true
     ingressController:
       enabled: false
-    #   enabled: true
-    #   default: true
-    #   service:
-    #     type: NodePort
-    #     insecureNodePort: 30080
-    #     secureNodePort: 30443
+      #   enabled: true
+      #   default: true
+      #   service:
+      #     type: NodePort
+      #     insecureNodePort: 30080
+      #     secureNodePort: 30443
       loadBalancerMode: shared
     prometheus:
       enabled: true

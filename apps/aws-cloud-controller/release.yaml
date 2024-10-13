@@ -1,4 +1,4 @@
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
+apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
   name: aws-cloud-controller-manager
@@ -17,6 +17,6 @@ spec:
       - --cloud-provider=aws
       - --configure-cloud-routes=false
     image:
-        tag: v1.30.3
+      tag: v1.30.3
   targetNamespace: kube-system
   interval: 1m0s
