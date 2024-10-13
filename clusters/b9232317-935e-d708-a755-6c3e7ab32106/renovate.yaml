@@ -2,7 +2,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: renovate
+  name: renovate-flux-bootstrap
   namespace: renovate
 spec:
   schedule: "@hourly"
@@ -27,7 +27,7 @@ spec:
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: renovate
+  name: renovate-auto-provider-id
   namespace: renovate
 spec:
   schedule: "@hourly"
