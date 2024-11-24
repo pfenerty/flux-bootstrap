@@ -10,7 +10,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: cilium
-      version: 1.16.2
+      version: 1.16.4
   releaseName: kube-system-cilium
   values:
     securityContext:

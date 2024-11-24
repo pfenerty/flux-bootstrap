@@ -10,8 +10,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: prometheus-community
-      version: 61.9.0
-      version: 65.2.0
+      version: 66.2.2
   releaseName: kube-prometheus-stack
   values:
     # prometheusOperator:
@@ -25,6 +24,13 @@ spec:
         serviceMonitorSelectorNilUsesHelmValues: false
         serviceMonitorSelector: {}
         serviceMonitorNamespaceSelector: {}
+        securityContext:
+          runAsGroup: 0
+          runAsNonRoot: false
+          runAsUser: 0
+          fsGroup: 2000
+          seccompProfile:
+            type: RuntimeDefault
         storageSpec:
           volumeClaimTemplate:
             spec:
