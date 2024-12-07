@@ -10,7 +10,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: aws-ebs-csi-driver
-      version: 2.35.1
+      version: 2.37.0
   values:
     storageClasses:
       - name: ebs-sc
