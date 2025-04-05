@@ -10,7 +10,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: cilium
-      version: 1.16.5
+      version: 1.17.2
   releaseName: kube-system-cilium
   values:
     securityContext:
@@ -56,6 +56,12 @@ spec:
         enabled: true
       tls:
         enabled: true
+        method: cert-manager
+        certValidityDuration: 1095
+        certManagerIssuerRef:
+          name: hubble-issuer
+          kind: ClusterIssuer
+          group: cert-manager.io
       metrics:
         enabled: [dns:query;ignoreAAAA, drop, tcp, flow, icmp, http]
         serviceMonitor:
@@ -64,12 +70,6 @@ spec:
           enabled: true
     ingressController:
       enabled: false
-      #   enabled: true
-      #   default: true
-      #   service:
-      #     type: NodePort
-      #     insecureNodePort: 30080
-      #     secureNodePort: 30443
       loadBalancerMode: shared
     prometheus:
       enabled: true
