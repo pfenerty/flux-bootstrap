@@ -46,38 +46,39 @@ spec:
     hubble:
       relay:
         enabled: true
-        # prometheus:
-        #   enabled: true
-        #   serviceMonitor:
-        #     enabled: true
+        prometheus:
+          enabled: true
+          serviceMonitor:
+            enabled: true
       ui:
         enabled: true
       tls:
+        enabled: true
         auto:
           enabled: true
-          method: cert-manager
+          method: certmanager
           certValidityDuration: 1095
           certManagerIssuerRef:
             name: hubble-issuer
             kind: ClusterIssuer
             group: cert-manager.io
-      # metrics:
-      #   enabled: [dns:query;ignoreAAAA, drop, tcp, flow, icmp, http]
-      #   serviceMonitor:
-      #     enabled: true
-      #   dashboards:
-      #     enabled: true
+      metrics:
+        enabled: [dns:query;ignoreAAAA, drop, tcp, flow, icmp, http]
+        serviceMonitor:
+          enabled: true
+        dashboards:
+          enabled: true
     ingressController:
       enabled: false
       loadBalancerMode: shared
-    # prometheus:
-    #   enabled: true
-    #   serviceMonitor:
-    #     enabled: true
-    # operator:
-    #   prometheus:
-    #     enabled: true
-    #     serviceMonitor:
-    #       enabled: true
+    prometheus:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+    operator:
+      prometheus:
+        enabled: true
+        serviceMonitor:
+          enabled: true
   targetNamespace: kube-system
   interval: 1m0s
