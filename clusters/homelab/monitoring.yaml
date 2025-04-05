@@ -65,27 +65,27 @@ spec:
   healthChecks:
     - apiVersion: apps/v1
       kind: DaemonSet
-      name: monitoring-kube-prometheus-stack-prometheus-node-exporter
+      name: kube-prometheus-stack-prometheus-node-exporter
       namespace: monitoring
     - apiVersion: apps/v1
       kind: Deployment
-      name: monitoring-kube-prometheus-operator
+      name: kps-operator
       namespace: monitoring
     - apiVersion: apps/v1
       kind: Deployment
-      name: monitoring-kube-prometheus-stack-grafana
+      name: kube-prometheus-stack-grafana
       namespace: monitoring
     - apiVersion: apps/v1
       kind: Deployment
-      name: monitoring-kube-prometheus-stack-kube-state-metrics
+      name: kube-prometheus-stack-kube-state-metrics
       namespace: monitoring
     - apiVersion: apps/v1
       kind: StatefulSet
-      name: prometheus-monitoring-kube-prometheus-prometheus
+      name: prometheus-kps
       namespace: monitoring
     - apiVersion: apps/v1
       kind: StatefulSet
-      name: alertmanager-monitoring-kube-prometheus-alertmanager
+      name: alertmanager-kps
       namespace: monitoring
   sourceRef:
     kind: GitRepository
