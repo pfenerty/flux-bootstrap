@@ -34,7 +34,7 @@ spec:
         storageSpec:
           volumeClaimTemplate:
             spec:
-              # storageClassName: ebs-sc
+              storageClassName: local-path-provisioner
               accessModes: ["ReadWriteOnce"]
               resources:
                 requests:
