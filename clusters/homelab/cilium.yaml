@@ -8,7 +8,7 @@ spec:
   interval: 3m0s
   retryInterval: 60s
   prune: true
-  path: ./apps/cilium
+  path: ./apps/cilium/homelab
   dependsOn:
     - name: cert-manager
   healthChecks:
