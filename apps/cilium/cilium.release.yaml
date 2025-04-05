@@ -43,8 +43,6 @@ spec:
       type: wireguard
     k8sServiceHost: localhost
     k8sServicePort: 7445
-    nodePort:
-      enabled: true
     hubble:
       relay:
         enabled: true
@@ -55,13 +53,14 @@ spec:
       ui:
         enabled: true
       tls:
-        enabled: true
-        method: cert-manager
-        certValidityDuration: 1095
-        certManagerIssuerRef:
-          name: hubble-issuer
-          kind: ClusterIssuer
-          group: cert-manager.io
+        auto:
+          enabled: true
+          method: cert-manager
+          certValidityDuration: 1095
+          certManagerIssuerRef:
+            name: hubble-issuer
+            kind: ClusterIssuer
+            group: cert-manager.io
       # metrics:
       #   enabled: [dns:query;ignoreAAAA, drop, tcp, flow, icmp, http]
       #   serviceMonitor:
