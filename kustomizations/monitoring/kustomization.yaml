@@ -1,5 +1,0 @@
-resources:
-  - namespace.yaml
-  - crds.yaml
-  - repo.yaml
-  - stack.yaml
