@@ -56,12 +56,12 @@ spec:
         enabled: true
       tls:
         enabled: true
-        # method: cert-manager
-        # certValidityDuration: 1095
-        # certManagerIssuerRef:
-        #   name: hubble-issuer
-        #   kind: ClusterIssuer
-        #   group: cert-manager.io
+        method: cert-manager
+        certValidityDuration: 1095
+        certManagerIssuerRef:
+          name: hubble-issuer
+          kind: ClusterIssuer
+          group: cert-manager.io
       # metrics:
       #   enabled: [dns:query;ignoreAAAA, drop, tcp, flow, icmp, http]
       #   serviceMonitor:
