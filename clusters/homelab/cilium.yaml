@@ -9,8 +9,6 @@ spec:
   retryInterval: 60s
   prune: true
   path: ./apps/cilium/homelab
-  dependsOn:
-    - name: cert-manager
   decryption:
     provider: sops
     secretRef:
