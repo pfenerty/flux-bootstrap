@@ -8,7 +8,7 @@ spec:
   interval: 3m0s
   retryInterval: 60s
   prune: true
-  path: ./apps/podinfo
+  path: ./apps/podinfo/overlays/homelab
   sourceRef:
     kind: GitRepository
     name: flux-system
