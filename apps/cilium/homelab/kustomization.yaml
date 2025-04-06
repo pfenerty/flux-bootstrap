@@ -4,4 +4,4 @@ resources:
   - ../repo.yaml
   - ../hubble.issuer.yaml
   - ../cilium.release.yaml
-  - hubble-trust-anchor.secret.yaml
+  - hubble-trust-anchor.yaml
