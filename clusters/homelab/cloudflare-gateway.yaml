@@ -79,7 +79,7 @@ spec:
   prune: true
   path: ./apps/cloudflare-gateway/gateway
   dependsOn:
-    - name: cloudflare-gateway-controller
+    - name: cloudflare-gateway-controller-install
   sourceRef:
     kind: GitRepository
     name: flux-system
