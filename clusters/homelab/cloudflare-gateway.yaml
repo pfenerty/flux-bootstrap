@@ -24,7 +24,7 @@ spec:
   interval: 3m0s
   retryInterval: 60s
   prune: true
-  path: ./apps/cloudflare-gateway/secrets/namespace
+  path: ./apps/cloudflare-gateway/namespace
   sourceRef:
     kind: GitRepository
     name: flux-system
