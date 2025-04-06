@@ -1,0 +1,85 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: gateway-api-crds
+  namespace: flux-system
+spec:
+  force: false
+  interval: 3m0s
+  retryInterval: 60s
+  prune: true
+  path: ./apps/cloudflare-gateway/api-crds
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cloudflare-gateway-namespace
+  namespace: flux-system
+spec:
+  force: false
+  interval: 3m0s
+  retryInterval: 60s
+  prune: true
+  path: ./apps/cloudflare-gateway/secrets/namespace
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cloudflare-gateway-secrets
+  namespace: flux-system
+spec:
+  force: false
+  interval: 3m0s
+  retryInterval: 60s
+  prune: true
+  path: ./apps/cloudflare-gateway/secrets/homelab
+  dependsOn:
+    - cloudflare-gateway-namespace
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-gpg
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cloudflare-gateway-controller
+  namespace: flux-system
+spec:
+  force: false
+  interval: 3m0s
+  retryInterval: 60s
+  prune: true
+  path: ./apps/cloudflare-gateway/controller
+  dependsOn:
+    - cloudflare-gateway-secrets
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cloudflare-gateway-gateway
+  namespace: flux-system
+spec:
+  force: false
+  interval: 3m0s
+  retryInterval: 60s
+  prune: true
+  path: ./apps/cloudflare-gateway/gateway
+  dependsOn:
+    - cloudflare-gateway-controller
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
