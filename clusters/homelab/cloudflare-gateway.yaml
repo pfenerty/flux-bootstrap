@@ -41,7 +41,7 @@ spec:
   prune: true
   path: ./apps/cloudflare-gateway/secrets/homelab
   dependsOn:
-    - cloudflare-gateway-namespace
+    - name: cloudflare-gateway-namespace
   decryption:
     provider: sops
     secretRef:
@@ -62,7 +62,7 @@ spec:
   prune: true
   path: ./apps/cloudflare-gateway/controller
   dependsOn:
-    - cloudflare-gateway-secrets
+    - name: cloudflare-gateway-secrets
   sourceRef:
     kind: GitRepository
     name: flux-system
@@ -79,7 +79,7 @@ spec:
   prune: true
   path: ./apps/cloudflare-gateway/gateway
   dependsOn:
-    - cloudflare-gateway-controller
+    - name: cloudflare-gateway-controller
   sourceRef:
     kind: GitRepository
     name: flux-system
