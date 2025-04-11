@@ -10,5 +10,5 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: prometheus-community
-      version: 19.0.0
+      version: 19.1.0
   interval: 1m0s
