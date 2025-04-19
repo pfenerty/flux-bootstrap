@@ -1,0 +1,86 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: forgejo
+  namespace: flux-system
+spec:
+  chart:
+    spec:
+      chart: forgejo
+      sourceRef:
+        kind: HelmRepository
+        name: forgejo
+      version: 12.0.0
+  releaseName: forgejo
+  values:
+    replicaCount: 1
+
+    global:
+      storageClass: "nfs-client"
+
+    persistence:
+      enabled: true
+      create: true
+      mount: true
+      claimName: gitea-shared-storage
+      size: 10Gi
+      accessModes:
+        - ReadWriteMany
+
+    strategy:
+      type: Recreate
+
+    gitea:
+      metrics:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+          namespace: monitoring
+      config:
+        APP_NAME: code.pfenerty.com
+        service:
+          DISABLE_REGISTRATION: true
+        server:
+          DISABLE_SSH: true
+        database:
+          DB_TYPE: mysql
+          HOST: 192.168.86.2:3306
+          NAME: forgejo
+          USER: forgejo
+          PASSWD: HD-o4E66Ha2XW_7EzrUd.yZP9ciHb3Vq@p
+          SCHEMA: forgejo
+        cache:
+          ADAPTER: redis
+          HOST: redis://forgejo-redis:6379
+
+    postgresql-ha:
+      enabled: false
+    redis-cluster:
+      enabled: false
+  valuesFrom:
+    - kind: Secret
+      name: dbauth
+      valuesKey: type
+      targetPath: gitea.config.database.DB_TYPE
+    - kind: Secret
+      name: dbauth
+      valuesKey: host
+      targetPath: gitea.config.database.HOST
+    - kind: Secret
+      name: dbauth
+      valuesKey: db
+      targetPath: gitea.config.database.NAME
+    - kind: Secret
+      name: dbauth
+      valuesKey: schema
+      targetPath: gitea.config.database.SCHEMA
+    - kind: Secret
+      name: dbauth
+      valuesKey: user
+      targetPath: gitea.config.database.USER
+    - kind: Secret
+      name: dbauth
+      valuesKey: password
+      targetPath: gitea.config.database.PASSWORD
+  targetNamespace: forgejo
+  interval: 1m0s

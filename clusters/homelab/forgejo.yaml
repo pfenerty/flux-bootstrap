@@ -1,0 +1,69 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: forgejo-prereq
+  namespace: flux-system
+spec:
+  force: false
+  interval: 3m0s
+  retryInterval: 60s
+  prune: true
+  path: ./apps/forgejo/prereq
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: forgejo-secrets
+  namespace: flux-system
+spec:
+  force: false
+  interval: 3m0s
+  retryInterval: 60s
+  prune: true
+  path: ./apps/forgejo/homelab/secrets
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-gpg
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: forgejo-dragonfly
+  namespace: flux-system
+spec:
+  force: false
+  interval: 3m0s
+  retryInterval: 60s
+  prune: true
+  path: ./apps/forgejo/dragonfly
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: forgejo-prereq
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: forgejo-instance
+  namespace: flux-system
+spec:
+  force: false
+  interval: 3m0s
+  retryInterval: 60s
+  prune: true
+  path: ./apps/forgejo/homelab/instance
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: forgejo-prereq
+    - name: forgejo-dragonfly
+    - name: forgejo-secrets
