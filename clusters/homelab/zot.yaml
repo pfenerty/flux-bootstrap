@@ -9,6 +9,10 @@ spec:
   retryInterval: 60s
   prune: true
   path: ./apps/zot/homelab
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-gpg
   sourceRef:
     kind: GitRepository
     name: flux-system
