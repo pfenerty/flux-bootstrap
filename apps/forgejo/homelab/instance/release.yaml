@@ -38,6 +38,7 @@ spec:
           namespace: monitoring
       config:
         APP_NAME: code.pfenerty.com
+        ROOT_URL: code.pfenerty.com
         service:
           DISABLE_REGISTRATION: true
         server:
