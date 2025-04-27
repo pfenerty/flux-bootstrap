@@ -23,7 +23,7 @@ spec:
     pvc:
       create: true
       storage: 50Gi
-      storageClassName: nfs-client
+      storageClassName: local-path
     externalSecrets:
       - secretName: httpauth
         mountPath: /secret
