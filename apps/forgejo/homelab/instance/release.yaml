@@ -38,11 +38,11 @@ spec:
           namespace: monitoring
       config:
         APP_NAME: code.pfenerty.com
-        ROOT_URL: code.pfenerty.com
         service:
           DISABLE_REGISTRATION: true
         server:
           DISABLE_SSH: true
+          ROOT_URL: code.pfenerty.com
         database:
           DB_TYPE: mysql
           HOST: 192.168.86.2:3306
