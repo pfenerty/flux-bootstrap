@@ -1,5 +1,5 @@
 ---
-apiVersion: source.toolkit.fluxcd.io/v1beta2
+apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
   name: zot
@@ -7,5 +7,5 @@ metadata:
 spec:
   interval: 60m0s
   provider: generic
-  timeout: 60s
+  timeout: 10m
   url: http://zotregistry.dev/helm-charts

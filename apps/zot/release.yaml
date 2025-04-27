@@ -2,68 +2,35 @@
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
 metadata:
-  name: vault
+  name: zot
   namespace: flux-system
 spec:
   chart:
     spec:
-      chart: vault
+      chart: zot
       reconcileStrategy: ChartVersion
       sourceRef:
         kind: HelmRepository
-        name: hashicorp
-      version: 0.30.0
+        name: zot
+      version: 0.1.68
   interval: 10m0s
-  targetNamespace: vault
+  targetNamespace: zot
   values:
     replicaCount: 1
     image:
-      repository: ghcr.io/project-zot/zot-linux-amd64
-      pullPolicy: IfNotPresent
-      tag: latest
-    serviceAccount:
+      repository: ghcr.io/project-zot/zot
+    persistence: true
+    pvc:
       create: true
-      annotations: {}
-      name: ""
-    service:
-      type: ClusterIP
-    mountConfig: true
-    mountSecret: true
-    secretFiles:
-      htpasswd: |-
-        patrick:$2y$05$mPAtVZ2JboJRGAIze6TakeDQi4yi7e3oD0x5GO0cgaOsDp6qNiJXq
-    configFiles:
-      config.json: |-
-        {
-        "storage": {
-          "rootDirectory": "/var/lib/registry"
-        },
-        "http": {
-          "address": "0.0.0.0",
-          "port": "5000",
-          "auth": {
-              "htpasswd": {
-                "path": "/secret/htpasswd"
-              }
-          },
-          "accessControl": {
-            "adminPolicy": {
-              "users": ["patrick"],
-              "actions": ["read", "create", "update", "delete"]
-            },
-            "repositories": {
-               "**": {
-                 "anonymousPolicy": ["read"]
-              }
-            }
-          }
-        },
-        "log": {
-          "level": "debug"
-        },
-        "extensions": {
-          "search": {
-            "enable": true
-          }
-        }
-        }
+      storage: 50Gi
+      storageClassName: nfs-client
+    externalSecrets:
+      - secretName: httpauth
+        mountPath: /secret
+    extraVolumes:
+      - name: server-config
+        configMap:
+          name: server-config
+    extraVolumeMounts:
+      - name: server-config
+        mountPath: /etc/zot

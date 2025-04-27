@@ -1,0 +1,13 @@
+apiVersion: v1
+data:
+  config.json: "{\n\t\"storage\": {\n\t\t\"rootDirectory\": \"/var/lib/registry\"\n\t},\n\t\"http\":
+    {\n\t\t\"address\": \"0.0.0.0\",\n\t\t\"port\": \"5000\",\n\t\t\"auth\": {\n\t\t\t\"htpasswd\":
+    {\n\t\t\t\t\"path\": \"/secret/htpasswd\"\n\t\t\t}\n\t\t},\n\t\t\"accessControl\":
+    {\n\t\t\t\"adminPolicy\": {\n\t\t\t\t\"users\": [\"patrick\"],\n\t\t\t\t\"actions\":
+    [\"read\", \"create\", \"update\", \"delete\"]\n\t\t\t},\n\t\t\t\"repositories\":
+    {\n\t\t\t\t\"**\": {\n\t\t\t\t\t\"anonymousPolicy\": [\"read\"]\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n}\n"
+kind: ConfigMap
+metadata:
+  creationTimestamp: null
+  name: server-config
+  namespace: zot
