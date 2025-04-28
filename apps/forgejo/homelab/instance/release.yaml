@@ -42,7 +42,7 @@ spec:
           DISABLE_REGISTRATION: true
         server:
           DISABLE_SSH: true
-          DOMAIN: code.pfenerty.com
+          ROOT_URL: https://code.pfenerty.com:443
         database:
           DB_TYPE: mysql
           HOST: 192.168.86.2:3306
