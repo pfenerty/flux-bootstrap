@@ -1,16 +1,13 @@
 {
 	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
 	"flux": {
-		"fileMatch": ["apps/.+\\.yaml$"]
-	},
-	"branchConcurrentLimit": 100,
-	"prConcurrentLimit": 100,
-	"prHourlyLimit": 100,
-	"automerge": true,
-	"packageRules": [
-		{
-			"matchUpdateTypes": ["minor", "patch", "pin", "digest"],
-			"automerge": true
-		}
-	]
+		"fileMatch": ["apps/.+\\.yaml$"],
+		"automerge": true,
+		"packageRules": [
+			{
+				"matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+				"automerge": true
+			}
+		]
+	}
 }
