@@ -10,7 +10,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: aws-cloud-controller-manager
-      version: 0.0.8
+      version: 0.0.9
   values:
     args:
       - --v=2
