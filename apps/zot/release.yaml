@@ -12,7 +12,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: zot
-      version: 0.1.77
+      version: 0.1.78
   interval: 10m0s
   targetNamespace: zot
   values:
