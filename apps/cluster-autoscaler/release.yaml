@@ -10,7 +10,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: cluster-autoscaler
-      version: 9.49.0
+      version: 9.50.0
   valuesFrom:
     - kind: Secret
       name: cluster-autoscaler-config
