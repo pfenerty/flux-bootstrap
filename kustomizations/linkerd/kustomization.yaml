@@ -1,6 +1,0 @@
-resources:
-  - repo.yaml
-  - crds.yaml
-  - issuers.yaml
-  - control-plane.yaml
-  - plugins.yaml
