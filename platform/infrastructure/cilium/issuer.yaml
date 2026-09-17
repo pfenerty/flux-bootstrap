@@ -1,0 +1,18 @@
+# The CA Cilium issues Hubble's mTLS certificates from. Its key is the
+# self-signed trust anchor Terraform generates and puts in
+# `kube-system/hubble-trust-anchor` - a credential, which is why it is not
+# in this repository.
+#
+# An Issuer and not a ClusterIssuer, deliberately. A ClusterIssuer resolves
+# its CA secret in cert-manager's `--cluster-resource-namespace`, which is
+# the namespace cert-manager itself runs in; the trust anchor is in
+# kube-system, where Cilium is. A namespaced Issuer reads the secret next to
+# it and needs no cluster-wide setting to find it.
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: hubble-issuer
+  namespace: kube-system
+spec:
+  ca:
+    secretName: hubble-trust-anchor

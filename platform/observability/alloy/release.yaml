@@ -1,0 +1,90 @@
+# Log collection. A DaemonSet that reads its node's pod logs and writes them
+# to Loki.
+#
+# It reads them through the Kubernetes API rather than from hostPath mounts
+# of /var/log, which is what promtail did and what promtail's replacements
+# usually still do. The API path costs a little API server traffic and buys a
+# collector that needs no host mounts at all, so it runs `restricted` - worth
+# it on a cluster whose Pod Security default can be raised to restricted.
+#
+# The field selector is what stops every replica collecting every pod: each
+# one is scoped to the node it is on, which it learns from the downward API.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: alloy
+  namespace: flux-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: alloy
+      version: 1.12.1
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+  targetNamespace: observability
+  values:
+    controller:
+      type: daemonset
+    alloy:
+      configMap:
+        content: |
+          // Pods on this node only. Without the field selector every replica
+          // of the DaemonSet would collect every pod in the cluster, and
+          // Loki would receive each line once per node.
+          //
+          // K8S_NODE_NAME is set by the chart from the downward API.
+          discovery.kubernetes "pods" {
+            role = "pod"
+
+            selectors {
+              role  = "pod"
+              field = "spec.nodeName=" + sys.env("K8S_NODE_NAME")
+            }
+          }
+
+          // The labels a log line is queryable by. Keep this list short:
+          // every distinct combination is a stream in Loki, and high
+          // cardinality here is the usual reason a Loki install falls over.
+          discovery.relabel "pods" {
+            targets = discovery.kubernetes.pods.targets
+
+            rule {
+              source_labels = ["__meta_kubernetes_namespace"]
+              target_label  = "namespace"
+            }
+
+            rule {
+              source_labels = ["__meta_kubernetes_pod_name"]
+              target_label  = "pod"
+            }
+
+            rule {
+              source_labels = ["__meta_kubernetes_pod_container_name"]
+              target_label  = "container"
+            }
+
+            rule {
+              source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+              target_label  = "app"
+            }
+
+            rule {
+              source_labels = ["__meta_kubernetes_node_name"]
+              target_label  = "node"
+            }
+          }
+
+          loki.source.kubernetes "pods" {
+            targets    = discovery.relabel.pods.output
+            forward_to = [loki.write.default.receiver]
+          }
+
+          loki.write "default" {
+            endpoint {
+              url = "http://loki.observability.svc.cluster.local:3100/loki/api/v1/push"
+            }
+          }
+    serviceMonitor:
+      enabled: true

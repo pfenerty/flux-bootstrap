@@ -1,0 +1,146 @@
+# Cilium's day-2 configuration. This release adopts the bootstrap install
+# Terraform created - same release name, same namespace - and upgrades it in
+# place to add what a cluster that is merely reachable does not need:
+# WireGuard encryption in strict mode, Hubble, and metrics.
+#
+# Everything above `encryption` is the bootstrap install's configuration
+# repeated verbatim. It has to be: these are not preferences, they are what
+# Cilium needs to run on Talos at all, and a Helm upgrade that omitted them
+# would remove them.
+#
+#   - The capability lists are the chart defaults minus SYS_MODULE, which
+#     Talos will not permit because the root filesystem is immutable and
+#     kernel modules cannot be loaded, and minus SYSLOG, which 1.20 added and
+#     this cluster does not use. Re-check both against the chart's values.yaml
+#     on every Cilium bump: the defaults do gain entries.
+#   - cgroup autoMount off, host root /sys/fs/cgroup: Talos mounts the cgroup
+#     filesystem itself and Cilium must not try to.
+#   - k8sServiceHost/Port point at KubePrism on localhost. kube-proxy is
+#     disabled, so there is nothing to implement a ClusterIP for the API
+#     server until Cilium is running - which it cannot be if reaching the API
+#     server needs it.
+#
+# The operator's replica count is left at the chart's default of two, which
+# assumes there are two nodes to put them on: the chart pairs it with a
+# *required* pod anti-affinity on hostname, so on a one-node cluster the
+# second replica is unschedulable and this release never reports ready. The
+# operator tolerates every taint, control plane included, so one control
+# plane node and one worker is enough.
+#
+# The pod CIDR comes from the `cilium-config` secret Terraform writes, not
+# from a value in this file. Strict mode drops unencrypted traffic to the
+# CIDR it is given, so if that CIDR and the one in the Talos machine config
+# ever disagreed, the result would be either dropped pod traffic or traffic
+# silently leaving the node in the clear. Reading it from the secret means
+# they cannot disagree.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cilium
+  namespace: flux-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: cilium
+      version: 1.20.2
+      sourceRef:
+        kind: HelmRepository
+        name: cilium
+  # Matches the release Terraform creates, which is what makes this an
+  # upgrade of that release rather than a second, conflicting install.
+  releaseName: kube-system-cilium
+  targetNamespace: kube-system
+  valuesFrom:
+    - kind: Secret
+      name: cilium-config
+      valuesKey: pod-cidr
+      targetPath: encryption.strictMode.egress.cidr
+  values:
+    ipam:
+      mode: kubernetes
+    kubeProxyReplacement: true
+    k8sServiceHost: localhost
+    k8sServicePort: 7445
+    cgroup:
+      autoMount:
+        enabled: false
+      hostRoot: /sys/fs/cgroup
+    securityContext:
+      capabilities:
+        ciliumAgent:
+          - CHOWN
+          - KILL
+          - NET_ADMIN
+          - NET_RAW
+          - IPC_LOCK
+          - SYS_ADMIN
+          - SYS_RESOURCE
+          - DAC_OVERRIDE
+          - FOWNER
+          - SETGID
+          - SETUID
+        cleanCiliumState:
+          - NET_ADMIN
+          - SYS_ADMIN
+          - SYS_RESOURCE
+
+    # Transparent pod-to-pod encryption. Strict mode makes it fail closed:
+    # traffic leaving a node for the pod CIDR is dropped unless it is
+    # encrypted, instead of falling back to plaintext when a peer's key is
+    # not yet known.
+    #
+    # `allowRemoteNodeIdentities` stays off because the pod CIDR and the VPC
+    # CIDR are disjoint - node-to-node traffic is never inside the strict
+    # CIDR, so nothing needs the exemption.
+    encryption:
+      enabled: true
+      type: wireguard
+      strictMode:
+        egress:
+          enabled: true
+          allowRemoteNodeIdentities: false
+
+    hubble:
+      relay:
+        enabled: true
+        prometheus:
+          enabled: true
+          serviceMonitor:
+            enabled: true
+      ui:
+        enabled: true
+      tls:
+        enabled: true
+        auto:
+          enabled: true
+          method: certmanager
+          certValidityDuration: 365
+          certManagerIssuerRef:
+            group: cert-manager.io
+            kind: Issuer
+            name: hubble-issuer
+      metrics:
+        enabled:
+          - dns:query;ignoreAAAA
+          - drop
+          - tcp
+          - flow
+          - icmp
+          - http
+        serviceMonitor:
+          enabled: true
+        dashboards:
+          enabled: true
+
+    prometheus:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+    operator:
+      prometheus:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+      dashboards:
+        enabled: true

@@ -1,0 +1,39 @@
+# V-242395. The dashboard is a cluster-wide administrative interface whose
+# access control is its service account's rather than its viewer's, and it has
+# a history of being deployed with far more permission than the person in
+# front of it has. Nothing here deploys it; this is what notices if something
+# starts to.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-kubernetes-dashboard
+  annotations:
+    policies.kyverno.io/title: Disallow the Kubernetes dashboard
+    policies.kyverno.io/category: Best Practices
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Pod
+spec:
+  background: true
+  rules:
+    - name: no-dashboard
+      # Matched by label rather than by name: the chart and the upstream
+      # manifests agree on these two labels and disagree on everything else.
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+              selector:
+                matchLabels:
+                  k8s-app: kubernetes-dashboard
+          - resources:
+              kinds:
+                - Pod
+              selector:
+                matchLabels:
+                  app.kubernetes.io/name: kubernetes-dashboard
+      validate:
+        failureAction: Audit
+        message: >-
+          The Kubernetes dashboard must not be deployed.
+        deny: {}

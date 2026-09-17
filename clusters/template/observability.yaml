@@ -1,0 +1,97 @@
+# Metrics, logs and runtime events. Optional in the sense that removing this
+# file leaves a working cluster - and in no other sense: the ServiceMonitors
+# that half the infrastructure declares are collected by nothing without it.
+#
+# Everything here wants storage, so it comes after the EBS driver.
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: kube-prometheus-stack
+  namespace: flux-system
+spec:
+  interval: 30m
+  retryInterval: 1m
+  timeout: 20m
+  prune: true
+  path: ./platform/observability/kube-prometheus-stack
+  dependsOn:
+    - name: platform-namespaces
+    - name: prometheus-operator-crds
+    - name: aws-ebs-csi-driver
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: kube-prometheus-stack
+      namespace: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: loki
+  namespace: flux-system
+spec:
+  interval: 30m
+  retryInterval: 1m
+  timeout: 15m
+  prune: true
+  path: ./platform/observability/loki
+  dependsOn:
+    - name: platform-namespaces
+    - name: aws-ebs-csi-driver
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: loki
+      namespace: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: alloy
+  namespace: flux-system
+spec:
+  interval: 30m
+  retryInterval: 1m
+  timeout: 10m
+  prune: true
+  path: ./platform/observability/alloy
+  dependsOn:
+    - name: loki
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: alloy
+      namespace: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: tetragon
+  namespace: flux-system
+spec:
+  interval: 30m
+  retryInterval: 1m
+  timeout: 10m
+  prune: true
+  path: ./platform/observability/tetragon
+  dependsOn:
+    - name: cilium
+    - name: prometheus-operator-crds
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: tetragon
+      namespace: flux-system

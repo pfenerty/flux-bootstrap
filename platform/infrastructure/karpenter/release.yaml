@@ -1,0 +1,65 @@
+# Node autoscaling. The worker autoscaling group is a fixed baseline that
+# exists to run this controller and the rest of the platform; everything
+# above it is provisioned by Karpenter, node by node, from pending pods.
+#
+# Karpenter gets its AWS credentials from two secrets, both written by
+# Terraform under `post_install.extras.karpenter`, because the chart takes
+# the two halves through different mechanisms:
+#
+#   - `flux-system/karpenter-config` supplies chart values through
+#     `valuesFrom`, which resolves secrets in this HelmRelease's namespace.
+#   - `kube-system/karpenter-aws-credentials` supplies the controller's
+#     environment through `controller.envFrom`, which resolves in the pod's
+#     namespace instead.
+#
+# `clusterEndpoint` is not optional here: Karpenter discovers it by itself
+# only on EKS, and this is not EKS - `settings.eksControlPlane` stays false.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: karpenter
+  namespace: flux-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: karpenter
+      version: 1.14.0
+      sourceRef:
+        kind: HelmRepository
+        name: karpenter
+  targetNamespace: kube-system
+  valuesFrom:
+    - kind: Secret
+      name: karpenter-config
+      valuesKey: cluster-name
+      targetPath: settings.clusterName
+    - kind: Secret
+      name: karpenter-config
+      valuesKey: cluster-endpoint
+      targetPath: settings.clusterEndpoint
+    - kind: Secret
+      name: karpenter-config
+      valuesKey: interruption-queue
+      targetPath: settings.interruptionQueue
+  values:
+    # One replica, not the chart's two. The chart pairs two replicas with a
+    # required pod anti-affinity on hostname and a DoNotSchedule topology
+    # spread across zones, and it refuses to run on nodes Karpenter itself
+    # created - so on the single-node worker baseline the second replica is
+    # unschedulable forever, and the HelmRelease never reports ready. Raise
+    # it once the baseline group has more than one node in more than one
+    # zone.
+    replicas: 1
+    controller:
+      envFrom:
+        - secretRef:
+            name: karpenter-aws-credentials
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          memory: 512Mi
+    serviceMonitor:
+      enabled: true

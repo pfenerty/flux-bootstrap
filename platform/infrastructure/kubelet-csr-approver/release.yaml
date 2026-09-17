@@ -1,0 +1,48 @@
+# Approves the kubelet's `kubernetes.io/kubelet-serving` certificate signing
+# requests.
+#
+# kube-controller-manager will not: it cannot verify that the SANs a node
+# asks for belong to that node, so it signs client certificates and leaves
+# serving certificates pending by design. Something has to make that
+# judgement, and this is what makes `hardening.kubelet_serving_certificates`
+# in the Terraform module usable - with the flag on and no approver, the CSRs
+# sit pending and `kubectl logs`, `exec`, `port-forward` and metrics-server
+# all stop working.
+#
+# Harmless with the flag off: the kubelets self-sign and never file a CSR, so
+# the approver simply has nothing to do. It is installed unconditionally
+# because the ordering only works in one direction - the approver has to be
+# running before the machine config asks for certificates, not after.
+#
+# The regex matches EC2 private DNS names, which is what nodes register as:
+# `ip-172-31-4-17.eu-west-2.compute.internal`. The approver also checks that
+# the name resolves to the address that requested it; the VPC leaves
+# `enableDnsSupport` at its default of on, so internal names resolve. If that
+# ever stops holding, `bypassDnsResolution: true` with this regex is the
+# fallback - it is the regex doing the real work either way.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kubelet-csr-approver
+  namespace: flux-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: kubelet-csr-approver
+      version: 1.2.15
+      sourceRef:
+        kind: HelmRepository
+        name: kubelet-csr-approver
+  targetNamespace: kube-system
+  values:
+    providerRegex: ^ip-(\d{1,3}-){3}\d{1,3}\.[a-z0-9-]+\.compute\.internal$
+    # 90 days, against a chart default of 367. The kubelet rotates well
+    # before expiry either way, and these nodes are replaced rather than
+    # patched - a year is longer than most of them will exist for.
+    maxExpirationSeconds: "7776000"
+    allowedDnsNames: 1
+    ignoreNonSystemNode: true
+    metrics:
+      serviceMonitor:
+        enabled: true

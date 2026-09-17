@@ -1,13 +1,57 @@
 {
-	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
-	"flux": {
-		"fileMatch": ["apps/.+\\.yaml$"],
-		"automerge": true,
-		"packageRules": [
-			{
-				"matchUpdateTypes": ["minor", "patch", "pin", "digest"],
-				"automerge": true
-			}
-		]
-	}
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "flux": {
+    "managerFilePatterns": [
+      "/^platform/.+\\.ya?ml$/"
+    ]
+  },
+  "packageRules": [
+    {
+      "description": "Patch and minor bumps land on their own; CI renders every chart, which is what makes that safe",
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
+      "automerge": true
+    },
+    {
+      "description": "Cilium is shared with the Terraform module, whose cilium_bootstrap_version installs the release this repository adopts. Bump both, in that order",
+      "matchDatasources": [
+        "helm"
+      ],
+      "matchPackageNames": [
+        "cilium"
+      ],
+      "automerge": false,
+      "addLabels": [
+        "bump-terraform-too"
+      ]
+    },
+    {
+      "description": "Karpenter reads a Terraform-written secret and provisions nodes from a Talos AMI. A major bump has broken the EC2NodeClass API before",
+      "matchPackageNames": [
+        "karpenter"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "automerge": false
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Tool versions pinned in the CI workflow, annotated with a renovate: comment",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.+\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "#\\s*renovate:\\s*datasource=(?<datasource>\\S+)\\s+depName=(?<depName>\\S+)(?:\\s+versioning=(?<versioning>\\S+))?\\s*\\n\\s*\\S+:\\s*\"?(?<currentValue>[^\"\\s]+)\"?"
+      ]
+    }
+  ]
 }

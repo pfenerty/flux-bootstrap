@@ -1,0 +1,50 @@
+# Block storage. The driver authenticates with the IAM user Terraform creates
+# for it under `post_install.extras.ebs`, which publishes the key pair as
+# `kube-system/aws-secret` with the key names the chart looks for by default.
+# Without that secret the controller starts and every volume stays pending.
+#
+# `ebs-sc` is the cluster's default StorageClass, so a PersistentVolumeClaim
+# that names no class gets an encrypted gp3 volume in the zone its consumer
+# is scheduled to.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: aws-ebs-csi-driver
+  namespace: flux-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: aws-ebs-csi-driver
+      version: 2.66.0
+      sourceRef:
+        kind: HelmRepository
+        name: aws-ebs-csi-driver
+  targetNamespace: kube-system
+  values:
+    controller:
+      # The volume attach limit is per node and low; the driver's own
+      # ServiceMonitor is how you find out you are near it.
+      enableMetrics: true
+      serviceMonitor:
+        forceEnable: true
+    node:
+      enableMetrics: true
+      serviceMonitor:
+        forceEnable: true
+    storageClasses:
+      - name: ebs-sc
+        annotations:
+          storageclass.kubernetes.io/is-default-class: "true"
+        # WaitForFirstConsumer, not Immediate: an EBS volume lives in one
+        # Availability Zone and cannot move, so binding it before the pod is
+        # scheduled can create it in a zone the pod cannot run in.
+        volumeBindingMode: WaitForFirstConsumer
+        reclaimPolicy: Delete
+        allowVolumeExpansion: true
+        parameters:
+          type: gp3
+          # Encrypted with the account's default EBS key. The nodes' root
+          # volumes are encrypted by the launch template; this is the same
+          # decision for data volumes.
+          encrypted: "true"

@@ -1,0 +1,87 @@
+# Log storage, in the smallest shape the chart offers: one StatefulSet, no
+# object store, no cache tier, no gateway.
+#
+# `SingleBinary` is chosen and not inherited - the chart defaults to
+# `SimpleScalable`, which is three components at three replicas each and a
+# gateway in front of them, sized for a cluster that ships far more than this
+# one does. The other components are explicitly zeroed rather than left
+# alone, because the chart renders whatever has a non-zero replica count.
+#
+# Storage is a single EBS volume on the filesystem backend. That is the
+# trade: one Availability Zone, one writer, and a volume that has to be
+# resized rather than grown by adding nodes. Moving to S3 means a bucket and
+# credentials, which is a Terraform change, not a change here.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: loki
+  namespace: flux-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: loki
+      version: 7.3.0
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+  targetNamespace: observability
+  values:
+    deploymentMode: SingleBinary
+    loki:
+      auth_enabled: false
+      commonConfig:
+        # One writer, so one copy. The default of 3 with a single instance
+        # leaves every write under-replicated and the ring unhealthy.
+        replication_factor: 1
+      storage:
+        type: filesystem
+      schemaConfig:
+        configs:
+          - from: "2024-04-01"
+            store: tsdb
+            object_store: filesystem
+            schema: v13
+            index:
+              prefix: loki_index_
+              period: 24h
+      limits_config:
+        retention_period: 744h
+        volume_enabled: true
+      compactor:
+        retention_enabled: true
+        delete_request_store: filesystem
+    singleBinary:
+      replicas: 1
+      persistence:
+        enabled: true
+        storageClass: ebs-sc
+        size: 50Gi
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          memory: 1Gi
+    # Everything the SimpleScalable default would have started.
+    read:
+      replicas: 0
+    write:
+      replicas: 0
+    backend:
+      replicas: 0
+    gateway:
+      enabled: false
+    chunksCache:
+      enabled: false
+    resultsCache:
+      enabled: false
+    lokiCanary:
+      enabled: false
+    test:
+      enabled: false
+    monitoring:
+      # Grafana picks these up through the stack's dashboard sidecar, which
+      # watches every namespace.
+      dashboards:
+        enabled: true

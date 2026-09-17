@@ -1,0 +1,34 @@
+# Resource metrics for `kubectl top` and for the HorizontalPodAutoscaler.
+#
+# `--kubelet-insecure-tls` is here because the kubelets self-sign their
+# serving certificates by default: the Terraform module's
+# `hardening.kubelet_serving_certificates` is what makes them CA-signed, and
+# it is opt-in. Without the flag, metrics-server refuses to scrape a kubelet
+# it cannot verify and reports no metrics at all.
+#
+# Turn that flag on - the CSR approver next to this release is its other
+# half - and then delete the argument. Leaving it set means metrics-server
+# accepts any certificate on port 10250, which is the thing the flag exists
+# to stop.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: metrics-server
+  namespace: flux-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: metrics-server
+      version: 3.14.0
+      sourceRef:
+        kind: HelmRepository
+        name: metrics-server
+  targetNamespace: kube-system
+  values:
+    args:
+      - --kubelet-insecure-tls
+    metrics:
+      enabled: true
+    serviceMonitor:
+      enabled: true

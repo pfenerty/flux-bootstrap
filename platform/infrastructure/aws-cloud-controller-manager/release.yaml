@@ -1,0 +1,40 @@
+# The first thing installed on a new cluster, and the reason everything else
+# can be installed at all.
+#
+# Talos runs with `externalCloudProvider`, so every kubelet registers its node
+# with `node.cloudprovider.kubernetes.io/uninitialized:NoSchedule` and nothing
+# without a toleration for it schedules. This DaemonSet is what removes that
+# taint: it looks each node up in EC2 by the name the kubelet registered,
+# writes `spec.providerID` and the topology labels, and marks the node
+# initialised.
+#
+# Three things let it run before the taint is gone. It tolerates the taint
+# itself, it is pinned to the control plane by the chart's node selector, and
+# it uses `dnsPolicy: Default` - the node's resolver rather than CoreDNS,
+# which cannot have started yet. All three are chart defaults; do not
+# override them.
+#
+# Node names are the EC2 private DNS name, because the Talos machine config
+# sets `registerWithFQDN`. That is load-bearing: the AWS provider finds the
+# instance by `private-dns-name`, and a short hostname does not match one.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: aws-cloud-controller-manager
+  namespace: flux-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: aws-cloud-controller-manager
+      version: 0.0.11
+      sourceRef:
+        kind: HelmRepository
+        name: aws-cloud-controller-manager
+  targetNamespace: kube-system
+  values:
+    args:
+      - --v=2
+      - --cloud-provider=aws
+      # Pod routing is Cilium's, not the VPC route table's.
+      - --configure-cloud-routes=false
