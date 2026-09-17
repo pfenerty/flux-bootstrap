@@ -120,5 +120,7 @@ than to the platform.
 ```
 
 Builds every kustomization, renders every `HelmRelease` against the chart it
-names, and validates the result against the Kubernetes and CRD schemas. It is
-what CI runs. See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+names, and validates the result against the Kubernetes and CRD schemas. The
+GitHub Actions workflow that runs it is in [`ci/validate.yaml`](ci/validate.yaml)
+and has to be moved to `.github/workflows/validate.yaml` before it will run.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md).

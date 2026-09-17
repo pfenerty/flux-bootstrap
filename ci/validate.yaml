@@ -1,0 +1,59 @@
+# The CI workflow. Move it into place before it will run:
+#
+#   git mv ci/validate.yaml .github/workflows/validate.yaml
+#
+# It is here rather than there because the token that first pushed this
+# repository was not allowed to write under .github/workflows. Nothing else
+# about it is unusual, and renovate.json already expects it at its final
+# path.
+name: validate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    env:
+      # renovate: datasource=github-releases depName=kubernetes-sigs/kustomize
+      KUSTOMIZE_VERSION: v5.7.1
+      # renovate: datasource=github-releases depName=yannh/kubeconform
+      KUBECONFORM_VERSION: v0.7.0
+      # renovate: datasource=github-releases depName=mikefarah/yq
+      YQ_VERSION: v4.47.1
+      # renovate: datasource=github-releases depName=helm/helm
+      HELM_VERSION: v3.19.0
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install tools
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.local/bin"
+          cd "$HOME/.local/bin"
+
+          curl -sSL "https://get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz" \
+            | tar xz --strip-components=1 linux-amd64/helm
+
+          curl -sSL "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" \
+            | tar xz kustomize
+
+          curl -sSL "https://github.com/yannh/kubeconform/releases/download/${KUBECONFORM_VERSION}/kubeconform-linux-amd64.tar.gz" \
+            | tar xz kubeconform
+
+          curl -sSL -o yq "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
+          chmod +x yq
+
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - run: ./scripts/validate.sh

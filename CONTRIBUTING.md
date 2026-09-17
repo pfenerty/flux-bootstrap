@@ -10,7 +10,11 @@ It builds every kustomization, validates the result against the Kubernetes
 and CRD schemas, and renders every `HelmRelease` against the chart it names -
 which is the check that catches a yanked chart version, a moved repository,
 or a value the chart's own schema rejects. It needs `helm`, `kustomize`,
-`kubeconform` and `yq` on `PATH`, talks to no cluster, and is what CI runs.
+`kubeconform` and `yq` on `PATH`, and talks to no cluster.
+
+CI runs the same script. Its workflow is in `ci/validate.yaml` and needs to be
+moved to `.github/workflows/validate.yaml` - the token that first pushed this
+repository could not write there.
 
 ## Conventions
 
