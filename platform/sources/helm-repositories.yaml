@@ -1,0 +1,99 @@
+# Every chart source in one place, owned by one Kustomization. Two
+# Kustomizations that both declared the same HelmRepository would fight over
+# it, and several of these are used by more than one layer: the Cilium
+# repository carries Tetragon, the Prometheus community repository carries
+# both the operator CRDs installed with the infrastructure and the stack
+# installed with the observability layer.
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: aws-cloud-controller-manager
+  namespace: flux-system
+spec:
+  interval: 1h
+  url: https://kubernetes.github.io/cloud-provider-aws
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: aws-ebs-csi-driver
+  namespace: flux-system
+spec:
+  interval: 1h
+  url: https://kubernetes-sigs.github.io/aws-ebs-csi-driver
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: cilium
+  namespace: flux-system
+spec:
+  interval: 1h
+  url: https://helm.cilium.io
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: grafana
+  namespace: flux-system
+spec:
+  interval: 1h
+  url: https://grafana.github.io/helm-charts
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: jetstack
+  namespace: flux-system
+spec:
+  interval: 1h
+  url: https://charts.jetstack.io
+# Karpenter publishes its chart as an OCI artifact rather than to a Helm
+# index, so this repository has no interval: there is nothing to poll, and
+# the tag named by the HelmRelease is fetched on demand.
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: karpenter
+  namespace: flux-system
+spec:
+  type: oci
+  url: oci://public.ecr.aws/karpenter
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: kubelet-csr-approver
+  namespace: flux-system
+spec:
+  interval: 1h
+  url: https://postfinance.github.io/kubelet-csr-approver
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: kyverno
+  namespace: flux-system
+spec:
+  interval: 1h
+  url: https://kyverno.github.io/kyverno
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: metrics-server
+  namespace: flux-system
+spec:
+  interval: 1h
+  url: https://kubernetes-sigs.github.io/metrics-server
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: prometheus-community
+  namespace: flux-system
+spec:
+  interval: 1h
+  url: https://prometheus-community.github.io/helm-charts

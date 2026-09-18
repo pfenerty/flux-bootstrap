@@ -1,0 +1,82 @@
+# Name shared by the EC2NodeClass and the NodePool. The Helm release is
+# called karpenter-nodes, which is a fine name for a release and a poor one
+# for the node pool every unscheduled pod lands in.
+name: default
+
+# Supplied by the HelmRelease from Terraform's `karpenter-config` secret.
+# There are no defaults worth having: every one of these is specific to the
+# cluster, and the templates fail rendering rather than guess.
+
+# AMI the nodes boot. The same Talos AMI the autoscaling groups use.
+amiID: ""
+# Instance profile the nodes assume. Karpenter launches into the existing
+# worker profile rather than managing one of its own.
+instanceProfile: ""
+# Value of the `karpenter.sh/discovery` tag on the subnets and the internal
+# security group. Terraform sets it to the project name.
+discoveryTag: ""
+# The Talos worker machine config, verbatim. It carries
+# `--register-with-taints=karpenter.sh/unregistered:NoExecute`, which
+# Karpenter requires on nodes it launches and removes once the NodeClaim has
+# registered - for its own AMI families it injects that itself, but this is
+# `amiFamily: Custom` and the user data is ours.
+userData: ""
+
+nodeClass:
+  # Root device of the Talos AMI.
+  rootDeviceName: /dev/xvda
+  rootVolume:
+    size: 100Gi
+    type: gp3
+    encrypted: true
+    deleteOnTermination: true
+  # Public, because the cluster's subnets are public and there is no NAT
+  # gateway: a node without a public address has no route off the VPC, and
+  # cannot pull an image or reach the API server.
+  associatePublicIPAddress: true
+  metadataOptions:
+    httpEndpoint: enabled
+    # IMDSv2 only.
+    httpTokens: required
+    # 2, not 1, to match the launch template the baseline nodes use: the
+    # kubelet and the cloud controller reach IMDS from the host network,
+    # which is one hop further than the instance itself.
+    httpPutResponseHopLimit: 2
+  # Extra tags on the instances and volumes Karpenter creates. Karpenter
+  # already adds `kubernetes.io/cluster/<name>: owned`, `eks:eks-cluster-name`,
+  # `karpenter.sh/nodepool`, `karpenter.sh/nodeclaim` and `Name` itself, and
+  # the IAM policy Terraform writes requires exactly those - do not try to
+  # set them here.
+  tags: {}
+
+nodePool:
+  # Ceiling on everything this pool provisions, in aggregate. A pool with no
+  # limit will answer a runaway workload by buying instances until the
+  # account's quota stops it.
+  limits:
+    cpu: "100"
+    memory: 400Gi
+  # on-demand only. Adding "spot" needs the `AWSServiceRoleForEC2Spot`
+  # service-linked role to exist in the account; without it CreateFleet fails
+  # and no node launches. The interruption queue Terraform creates already
+  # handles spot interruption notices, so that is the only thing in the way.
+  capacityTypes:
+    - on-demand
+  architectures:
+    - amd64
+  instanceCategories:
+    - c
+    - m
+    - r
+    - t
+  # Generation 2 and older are a decade old and priced accordingly.
+  minInstanceGeneration: "2"
+  # Replace nodes after 30 days whether or not anything is wrong with them.
+  # The OS is immutable and not patched in place, so rotation is how a node
+  # picks up a new Talos or Kubernetes version.
+  expireAfter: 720h
+  disruption:
+    consolidationPolicy: WhenEmptyOrUnderutilized
+    consolidateAfter: 1m
+    budgets:
+      - nodes: 10%

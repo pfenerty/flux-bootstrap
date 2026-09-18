@@ -1,0 +1,30 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: observability
+spec:
+  description: >-
+    Default-deny on ingress for the observability namespace. Egress is not restricted.
+  endpointSelector: {}
+  enableDefaultDeny:
+    ingress: true
+    egress: false
+  ingress:
+    # Same namespace. A namespaced policy's empty endpoint selector does not
+    # reach past its own namespace, which is what makes this mean that.
+    - fromEndpoints:
+        - {}
+    # The API server calling a webhook, the kubelet running a probe, port
+    # forwarding, and Cilium's own health checks.
+    - fromEntities:
+        - kube-apiserver
+        - host
+        - remote-node
+        - health
+    # Prometheus scraping. Not narrowed to the metrics ports: the scrape
+    # target is whatever port each ServiceMonitor names, and enumerating
+    # them here would mean editing this file every time one is added.
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: observability

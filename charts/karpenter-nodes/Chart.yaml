@@ -1,0 +1,12 @@
+apiVersion: v2
+name: karpenter-nodes
+description: >-
+  The EC2NodeClass and NodePool Karpenter provisions Talos workers from. A
+  chart rather than manifests because the Talos machine config that becomes
+  the nodes' user data is a multi-line value that has to be injected from a
+  Kubernetes secret, which only a HelmRelease valuesFrom targetPath can do.
+type: application
+# Static. The HelmRelease that installs this uses
+# `reconcileStrategy: Revision`, so releases follow the git revision rather
+# than this number, and there is no registry for it to be meaningful in.
+version: 1.0.0

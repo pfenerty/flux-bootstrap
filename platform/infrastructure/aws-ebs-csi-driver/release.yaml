@@ -1,0 +1,86 @@
+# Block storage. The controller authenticates with a role it assumes using its
+# own projected service account token: `awsAccessSecret` is disabled so the
+# chart stops looking for a static key pair, and the role ARN, the token path
+# and the region arrive as environment variables from a ConfigMap Terraform
+# writes under `post_install.extras.ebs`.
+#
+# The node plugin gets no credentials at all - it only mounts volumes that are
+# already attached - but it does need to know which instance it is on, and it
+# cannot ask the metadata service: the launch templates set an IMDS hop limit
+# of 1 and this DaemonSet is not on the host network. `metadataSources`
+# points it at its own Node object instead, which the AWS cloud controller
+# manager has by then labelled. That is also why this is ordered after it.
+#
+# `ebs-sc` is the cluster's default StorageClass, so a PersistentVolumeClaim
+# that names no class gets an encrypted gp3 volume in the zone its consumer
+# is scheduled to.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: aws-ebs-csi-driver
+  namespace: flux-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: aws-ebs-csi-driver
+      version: 2.66.0
+      sourceRef:
+        kind: HelmRepository
+        name: aws-ebs-csi-driver
+  targetNamespace: kube-system
+  values:
+    # Disabled rather than left at its default: with this set the chart wires
+    # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY into the controller from a
+    # secret, and those would win over the web identity credentials below.
+    awsAccessSecret: null
+    controller:
+      envFrom:
+        - configMapRef:
+            name: ebs-csi-driver-aws-config
+      volumes:
+        # `audience` is not optional: AWS refuses a token minted for anything
+        # other than sts.amazonaws.com.
+        - name: aws-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: token
+                  audience: sts.amazonaws.com
+                  expirationSeconds: 3600
+      volumeMounts:
+        # Terraform writes this path into AWS_WEB_IDENTITY_TOKEN_FILE. The two
+        # have to agree and nothing checks that they do.
+        - name: aws-token
+          mountPath: /var/run/secrets/aws
+          readOnly: true
+      # The volume attach limit is per node and low; the driver's own
+      # ServiceMonitor is how you find out you are near it.
+      enableMetrics: true
+      serviceMonitor:
+        forceEnable: true
+    node:
+      enableMetrics: true
+      serviceMonitor:
+        forceEnable: true
+      # Not `imds`, which is the default: a pod cannot reach the metadata
+      # service on these nodes. The instance ID, zone and instance type come
+      # off the Node object instead, where the cloud controller manager put
+      # them.
+      metadataSources: kubernetes
+    storageClasses:
+      - name: ebs-sc
+        annotations:
+          storageclass.kubernetes.io/is-default-class: "true"
+        # WaitForFirstConsumer, not Immediate: an EBS volume lives in one
+        # Availability Zone and cannot move, so binding it before the pod is
+        # scheduled can create it in a zone the pod cannot run in.
+        volumeBindingMode: WaitForFirstConsumer
+        reclaimPolicy: Delete
+        allowVolumeExpansion: true
+        parameters:
+          type: gp3
+          # Encrypted with the account's default EBS key. The nodes' root
+          # volumes are encrypted by the launch template; this is the same
+          # decision for data volumes.
+          encrypted: "true"

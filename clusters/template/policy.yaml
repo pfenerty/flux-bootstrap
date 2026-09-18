@@ -1,0 +1,70 @@
+# Cluster policy: what may be admitted, and what may talk to what.
+#
+# The Terraform module's `hardening` sets the cluster-wide Pod Security
+# default and `docs/hardening.md` lists what it cannot express and leaves to
+# this repository. This is that list.
+#
+# Last, deliberately. Both halves constrain the workloads installed by the
+# layers above, and a policy that is admitted before the thing it constrains
+# is the only order in which a mistake here is recoverable without an
+# operator.
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: kyverno
+  namespace: flux-system
+spec:
+  interval: 30m
+  retryInterval: 1m
+  timeout: 10m
+  prune: true
+  path: ./platform/policy/kyverno
+  dependsOn:
+    - name: platform-namespaces
+    - name: prometheus-operator-crds
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: kyverno
+      namespace: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: kyverno-policies
+  namespace: flux-system
+spec:
+  interval: 30m
+  retryInterval: 1m
+  timeout: 5m
+  prune: true
+  path: ./platform/policy/kyverno-policies
+  dependsOn:
+    - name: kyverno
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: network-policies
+  namespace: flux-system
+spec:
+  interval: 30m
+  retryInterval: 1m
+  timeout: 5m
+  prune: true
+  path: ./platform/policy/network-policies
+  # CiliumNetworkPolicy is a CRD Cilium installs, and the policies name
+  # namespaces the layers above create.
+  dependsOn:
+    - name: cilium
+    - name: platform-namespaces
+  sourceRef:
+    kind: GitRepository
+    name: flux-system

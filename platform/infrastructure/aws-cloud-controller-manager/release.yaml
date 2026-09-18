@@ -1,0 +1,86 @@
+# The first thing installed on a new cluster, and the reason everything else
+# can be installed at all.
+#
+# Talos runs with `externalCloudProvider`, so every kubelet registers its node
+# with `node.cloudprovider.kubernetes.io/uninitialized:NoSchedule` and nothing
+# without a toleration for it schedules. This DaemonSet is what removes that
+# taint: it looks each node up in EC2 by the name the kubelet registered,
+# writes `spec.providerID` and the topology labels, and marks the node
+# initialised.
+#
+# Three things let it run before the taint is gone. It tolerates the taint
+# itself, it is pinned to the control plane by the chart's node selector, and
+# it uses `dnsPolicy: Default` - the node's resolver rather than CoreDNS,
+# which cannot have started yet. All three are chart defaults; do not
+# override them.
+#
+# Node names are the EC2 private DNS name, because the Talos machine config
+# sets `registerWithFQDN`. That is load-bearing: the AWS provider finds the
+# instance by `private-dns-name`, and a short hostname does not match one.
+#
+# Nothing here reads the instance metadata service. The nodes' launch
+# templates set an IMDS hop limit of 1, which a pod cannot cross, so the two
+# things this controller used to get from metadata come from elsewhere:
+#
+#   - Credentials, from a role it assumes with its own projected service
+#     account token. The AWS SDK finds the role ARN and the token file in the
+#     shared config file mounted below, and does the exchange itself.
+#   - Its region, VPC and instance identity, from the cloud config file.
+#     Upstream calls this the "different AWS account, different cloud
+#     provider or on-premise" path: given VPC, SubnetID and
+#     KubernetesClusterID it builds a synthetic self-instance rather than
+#     asking metadata which instance it is on.
+#
+# Both files are keys of a ConfigMap Terraform writes, because both carry
+# values specific to one cluster. This chart has no `envFrom`, which is why
+# the credentials arrive as a config file here and as environment variables
+# in the other two components.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: aws-cloud-controller-manager
+  namespace: flux-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: aws-cloud-controller-manager
+      version: 0.0.11
+      sourceRef:
+        kind: HelmRepository
+        name: aws-cloud-controller-manager
+  targetNamespace: kube-system
+  values:
+    args:
+      - --v=2
+      - --cloud-provider=aws
+      # Pod routing is Cilium's, not the VPC route table's.
+      - --configure-cloud-routes=false
+      - --cloud-config=/etc/aws/cloud.conf
+    env:
+      - name: AWS_CONFIG_FILE
+        value: /etc/aws/config
+    extraVolumes:
+      - name: aws-config
+        configMap:
+          name: cloud-controller-manager-aws-config
+      # The token the role is assumed with. `audience` is not optional: AWS
+      # refuses a token minted for anything other than sts.amazonaws.com,
+      # which is what stops a token intended for the API server being
+      # replayed against IAM.
+      - name: aws-token
+        projected:
+          sources:
+            - serviceAccountToken:
+                path: token
+                audience: sts.amazonaws.com
+                expirationSeconds: 3600
+    extraVolumeMounts:
+      - name: aws-config
+        mountPath: /etc/aws
+        readOnly: true
+      # Terraform writes this path into the shared config file. The two have
+      # to agree and nothing checks that they do.
+      - name: aws-token
+        mountPath: /var/run/secrets/aws
+        readOnly: true

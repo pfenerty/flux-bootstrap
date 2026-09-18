@@ -1,0 +1,43 @@
+# Runtime security observability: process execution, file access and network
+# activity, as eBPF events off the kernel rather than from inside the
+# container.
+#
+# It is the one component here that is neither load-bearing nor a dependency
+# of anything - the cluster runs identically without it. It earns its place
+# by being the only source of what a process actually did, which is what an
+# audit log of API calls cannot tell you.
+#
+# Kept close to the chart defaults. The export filter below is the default
+# one; it is written out because narrowing it is the first thing anyone does
+# when the event volume turns out to be more than they wanted.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: tetragon
+  namespace: flux-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: tetragon
+      version: 1.7.1
+      sourceRef:
+        kind: HelmRepository
+        name: cilium
+  targetNamespace: kube-system
+  values:
+    tetragon:
+      prometheus:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+      grpc:
+        enabled: true
+    tetragonOperator:
+      prometheus:
+        enabled: true
+        serviceMonitor:
+          enabled: true
+    export:
+      stdout:
+        enabled: true

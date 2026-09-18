@@ -1,0 +1,39 @@
+# V-242414. A hostPort binds the node's network namespace, which reaches past
+# every NetworkPolicy in the cluster and collides with anything else that
+# wants the same port on that node. Services exist for this.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: disallow-host-ports
+  annotations:
+    policies.kyverno.io/title: Disallow host ports
+    policies.kyverno.io/category: Pod Security
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Pod
+spec:
+  background: true
+  rules:
+    - name: no-host-ports
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      exclude:
+        any:
+          - resources:
+              namespaces:
+                - kube-system
+                - flux-system
+      validate:
+        failureAction: Audit
+        message: >-
+          Host ports are not allowed. Expose the workload with a Service.
+        pattern:
+          spec:
+            =(initContainers):
+              - =(ports):
+                  - X(hostPort): "null"
+            containers:
+              - =(ports):
+                  - X(hostPort): "null"

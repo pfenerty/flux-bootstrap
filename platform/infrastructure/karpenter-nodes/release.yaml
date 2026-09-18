@@ -1,0 +1,46 @@
+# The EC2NodeClass and NodePool that tell Karpenter what a node is.
+#
+# These are plain custom resources, but they are delivered as a Helm release
+# of a chart in this repository rather than as manifests, because four of
+# their fields are cluster-specific values that live in Terraform's
+# `karpenter-config` secret - and one of them, the Talos machine config in
+# `userData`, is multi-line. A `HelmRelease` can read a secret into a
+# specific field with `valuesFrom` and a `targetPath`; Flux's `postBuild`
+# substitution is a plain string replace and would destroy the indentation
+# of a multi-line value.
+#
+# `reconcileStrategy: Revision` is what makes edits to the chart take effect:
+# its version is static, so without it a change to the templates would never
+# be rolled out.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: karpenter-nodes
+  namespace: flux-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: ./charts/karpenter-nodes
+      reconcileStrategy: Revision
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+  targetNamespace: kube-system
+  valuesFrom:
+    - kind: Secret
+      name: karpenter-config
+      valuesKey: node-ami-id
+      targetPath: amiID
+    - kind: Secret
+      name: karpenter-config
+      valuesKey: node-instance-profile
+      targetPath: instanceProfile
+    - kind: Secret
+      name: karpenter-config
+      valuesKey: discovery-tag
+      targetPath: discoveryTag
+    - kind: Secret
+      name: karpenter-config
+      valuesKey: node-user-data
+      targetPath: userData

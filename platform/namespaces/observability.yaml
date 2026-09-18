@@ -1,0 +1,13 @@
+# privileged, for node-exporter alone: it runs with the host network, the host
+# PID namespace and hostPath mounts of /proc and /sys, which is what a node
+# exporter is, and no lower standard admits it. Prometheus, Grafana, Loki and
+# Alloy in the same namespace are all restricted-clean, which is what the
+# audit and warn labels report on.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: observability
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted

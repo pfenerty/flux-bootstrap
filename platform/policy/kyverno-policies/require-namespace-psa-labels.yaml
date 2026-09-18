@@ -1,0 +1,41 @@
+# V-242437, the per-namespace half. The cluster-wide default is set by the
+# Terraform module's `hardening`; this is what stops a namespace being
+# created without a level of its own and inheriting whatever the default
+# happens to be that week.
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-namespace-psa-labels
+  annotations:
+    policies.kyverno.io/title: Require Pod Security labels on namespaces
+    policies.kyverno.io/category: Pod Security Admission
+    policies.kyverno.io/severity: medium
+    policies.kyverno.io/subject: Namespace
+spec:
+  background: true
+  rules:
+    - name: enforce-label-present
+      match:
+        any:
+          - resources:
+              kinds:
+                - Namespace
+      exclude:
+        any:
+          - resources:
+              names:
+                - kube-system
+                - kube-public
+                - kube-node-lease
+                - flux-system
+                - default
+      validate:
+        failureAction: Audit
+        message: >-
+          Namespace {{ request.object.metadata.name }} has no
+          pod-security.kubernetes.io/enforce label. Set one explicitly, even
+          if it matches the cluster default.
+        pattern:
+          metadata:
+            labels:
+              pod-security.kubernetes.io/enforce: "?*"

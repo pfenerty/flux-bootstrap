@@ -1,0 +1,41 @@
+# The admission controller the policies next to this release are enforced by.
+#
+# Kyverno and not the Pod Security admission plugin alone: PSA is a single
+# level per namespace and cannot express "no secrets in environment
+# variables" or "every workload has its own service account". The two are
+# complementary, and the namespace labels in platform/namespaces are the PSA
+# half.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kyverno
+  namespace: flux-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: kyverno
+      version: 3.9.1
+      sourceRef:
+        kind: HelmRepository
+        name: kyverno
+  targetNamespace: kyverno
+  values:
+    # An admission controller that is down fails requests or, worse, waves
+    # them through. Two replicas, and a PDB, so a node rotation does not
+    # take the last one.
+    admissionController:
+      replicas: 2
+      podDisruptionBudget:
+        enabled: true
+      serviceMonitor:
+        enabled: true
+    backgroundController:
+      serviceMonitor:
+        enabled: true
+    cleanupController:
+      serviceMonitor:
+        enabled: true
+    reportsController:
+      serviceMonitor:
+        enabled: true

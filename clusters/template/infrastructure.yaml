@@ -1,0 +1,253 @@
+# The layer without which the cluster is not a cluster. Ordered by what
+# actually blocks what, not by preference:
+#
+#   sources -> cloud controller -> cert-manager -> Cilium -> the rest
+#
+# The cloud controller is first because every node comes up tainted
+# `node.cloudprovider.kubernetes.io/uninitialized` and nothing else here
+# tolerates it. cert-manager is next because Cilium's Hubble certificates are
+# issued by it. The Prometheus CRDs sit alongside because half of these charts
+# declare a ServiceMonitor and Helm fails a release whose CRD is missing.
+#
+# Health checks are on the HelmRelease rather than on the Deployments it
+# produces. A HelmRelease goes Ready when Helm's own wait has seen the
+# release's workloads become available, so it means the same thing without
+# naming resources whose names the chart is free to change.
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: platform-sources
+  namespace: flux-system
+spec:
+  interval: 30m
+  retryInterval: 1m
+  timeout: 5m
+  prune: true
+  path: ./platform/sources
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: platform-namespaces
+  namespace: flux-system
+spec:
+  interval: 30m
+  retryInterval: 1m
+  timeout: 5m
+  prune: true
+  path: ./platform/namespaces
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: aws-cloud-controller-manager
+  namespace: flux-system
+spec:
+  interval: 30m
+  retryInterval: 1m
+  timeout: 10m
+  prune: true
+  path: ./platform/infrastructure/aws-cloud-controller-manager
+  dependsOn:
+    - name: platform-sources
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: aws-cloud-controller-manager
+      namespace: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: prometheus-operator-crds
+  namespace: flux-system
+spec:
+  interval: 30m
+  retryInterval: 1m
+  timeout: 10m
+  prune: true
+  path: ./platform/infrastructure/prometheus-operator-crds
+  dependsOn:
+    - name: platform-sources
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: prometheus-operator-crds
+      namespace: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cert-manager
+  namespace: flux-system
+spec:
+  interval: 30m
+  retryInterval: 1m
+  timeout: 10m
+  prune: true
+  path: ./platform/infrastructure/cert-manager
+  dependsOn:
+    - name: platform-namespaces
+    - name: aws-cloud-controller-manager
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: cert-manager
+      namespace: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cilium
+  namespace: flux-system
+spec:
+  interval: 30m
+  retryInterval: 1m
+  timeout: 15m
+  prune: true
+  path: ./platform/infrastructure/cilium
+  dependsOn:
+    - name: cert-manager
+    - name: prometheus-operator-crds
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: cilium
+      namespace: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: kubelet-csr-approver
+  namespace: flux-system
+spec:
+  interval: 30m
+  retryInterval: 1m
+  timeout: 10m
+  prune: true
+  path: ./platform/infrastructure/kubelet-csr-approver
+  dependsOn:
+    - name: aws-cloud-controller-manager
+    - name: prometheus-operator-crds
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: kubelet-csr-approver
+      namespace: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: metrics-server
+  namespace: flux-system
+spec:
+  interval: 30m
+  retryInterval: 1m
+  timeout: 10m
+  prune: true
+  path: ./platform/infrastructure/metrics-server
+  # After the CSR approver, so that a cluster with
+  # `hardening.kubelet_serving_certificates` on has something to approve the
+  # kubelets' certificates before metrics-server tries to verify them.
+  dependsOn:
+    - name: kubelet-csr-approver
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: metrics-server
+      namespace: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: aws-ebs-csi-driver
+  namespace: flux-system
+spec:
+  interval: 30m
+  retryInterval: 1m
+  timeout: 10m
+  prune: true
+  path: ./platform/infrastructure/aws-ebs-csi-driver
+  dependsOn:
+    - name: aws-cloud-controller-manager
+    - name: prometheus-operator-crds
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: aws-ebs-csi-driver
+      namespace: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: karpenter
+  namespace: flux-system
+spec:
+  interval: 30m
+  retryInterval: 1m
+  timeout: 10m
+  prune: true
+  path: ./platform/infrastructure/karpenter
+  dependsOn:
+    - name: aws-cloud-controller-manager
+    - name: prometheus-operator-crds
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: karpenter
+      namespace: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: karpenter-nodes
+  namespace: flux-system
+spec:
+  interval: 30m
+  retryInterval: 1m
+  timeout: 10m
+  prune: true
+  path: ./platform/infrastructure/karpenter-nodes
+  # The EC2NodeClass and NodePool are instances of CRDs the Karpenter chart
+  # installs, so the controller's release has to exist first.
+  dependsOn:
+    - name: karpenter
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: karpenter-nodes
+      namespace: flux-system
