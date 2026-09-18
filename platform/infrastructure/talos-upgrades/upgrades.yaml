@@ -1,0 +1,61 @@
+# What the cluster should be running. tuppr reconciles the fleet to these.
+#
+# Both versions come from Terraform, which already holds them to select the
+# node AMI and render the machine config, and writes them to
+# `flux-system/cluster-versions`. Restating them here would mean two sources
+# of truth for one upgrade and a window where the version a new node boots and
+# the version the fleet converges to disagree - so the Kustomization that
+# renders this directory substitutes them in, with `optional: false` so a
+# missing ConfigMap fails rather than resolving to nothing.
+#
+# The `:?` form is not a hard failure in Flux's envsubst - it substitutes the
+# message rather than erroring - but the message does not match the version
+# pattern both CRDs validate against, so a missing key fails the apply with
+# that text in the error. A bare `${talos_version}` would fail too, as an
+# empty string, and say nothing about why.
+#
+# Nothing else in this directory contains a `$`. If anything is added that
+# does, escape it as `$${...}`: substitution applies to every manifest the
+# Kustomization renders.
+---
+apiVersion: tuppr.home-operations.com/v1alpha1
+kind: TalosUpgrade
+metadata:
+  name: cluster
+spec:
+  talos:
+    version: ${talos_version:?cluster-versions must define talos_version}
+    # Pull each node's installer image before the first node is cordoned, so
+    # an unreachable registry or a bad tag parks the run before anything is
+    # disrupted rather than halfway through the fleet.
+    prePull: true
+  policy:
+    # Drain the node and wait for its CSI volumes to detach before the reboot.
+    # On because this cluster runs the EBS CSI driver: a fast reboot that
+    # orphans a mount produces a Multi-Attach error on the volume, and the pod
+    # that owned it does not come back until the attachment times out. No-op
+    # on a single-node cluster.
+    waitForVolumeDetach: true
+    # Required anti-affinity between the upgrade Job and the node it is
+    # upgrading. tuppr downgrades this to a preference by itself on a
+    # single-node cluster, where the Job would otherwise never schedule.
+    placement: hard
+    # The chart default is true, which is a reasonable default for a
+    # controller you are learning and a noisy one for a cluster you are not.
+    debug: false
+  # Which nodes the run covers. Absent means every node, including the ones
+  # Karpenter launched - which is usually not what you want, because those are
+  # replaced on drift rather than upgraded. Add a selector once there is a
+  # label that tells the two apart.
+---
+# Exactly one of these per cluster; tuppr rejects a second. It does not reboot
+# anything - the control plane components and the kubelets are restarted in
+# place - and it never runs at the same time as a TalosUpgrade, so bumping
+# both versions in one commit serialises rather than colliding.
+apiVersion: tuppr.home-operations.com/v1alpha1
+kind: KubernetesUpgrade
+metadata:
+  name: kubernetes
+spec:
+  kubernetes:
+    version: ${kubernetes_version:?cluster-versions must define kubernetes_version}

@@ -14,6 +14,11 @@
 # `talos-upgrades`, are separate Kustomizations rather than one each: the CRDs
 # have to be registered before an instance of them will apply.
 #
+# `talos-upgrades` is the one Kustomization here that uses `postBuild`
+# substitution. Its two manifests carry versions Terraform owns, and they are
+# single-line scalars - the thing that made `karpenter-nodes` a Helm chart
+# instead was a multi-line value that a string replace would have reindented.
+#
 # Health checks are on the HelmRelease rather than on the Deployments it
 # produces. A HelmRelease goes Ready when Helm's own wait has seen the
 # release's workloads become available, so it means the same thing without
@@ -278,11 +283,18 @@ spec:
   sourceRef:
     kind: GitRepository
     name: flux-system
-  healthChecks:
-    - apiVersion: helm.toolkit.fluxcd.io/v2
-      kind: HelmRelease
-      name: talos-upgrades
-      namespace: flux-system
+  # The versions Terraform wrote. `optional: false` so a missing ConfigMap
+  # fails the Kustomization rather than substituting nothing into the field
+  # that decides what every node in the cluster upgrades to.
+  postBuild:
+    substituteFrom:
+      - kind: ConfigMap
+        name: cluster-versions
+        optional: false
+  # No health check. The only resources here are the two upgrade objects, and
+  # their Ready condition goes false for as long as a rollout is running -
+  # which is longer than this Kustomization's timeout, so checking them would
+  # report a failure every time an upgrade actually happened.
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization

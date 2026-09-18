@@ -24,6 +24,20 @@ ok() { printf '  %s\n' "$*"; }
 CRD_SCHEMAS='https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json'
 KUBE_VERSION="${KUBE_VERSION:-1.34.0}"
 
+# tuppr's two kinds are skipped rather than validated, for two reasons that
+# both resolve on their own eventually.
+#
+# The catalog's copy of their schemas is well behind the chart version pinned
+# in platform/infrastructure/tuppr - it has no prePull, waitForVolumeDetach,
+# nodeSelector, hooks, maintenance or parallelism - so it rejects fields that
+# are valid in the release actually installed. And the manifests carry
+# `${talos_version}` placeholders that Flux substitutes at apply, which no
+# version string pattern will ever match.
+#
+# What does validate them is the CRD in the cluster: kustomize-controller
+# applies these through the API server, which rejects a bad field there.
+SKIP_KINDS='TalosUpgrade,KubernetesUpgrade'
+
 note "kustomize build"
 builds=$(mktemp -d)
 trap 'rm -rf "$builds"' EXIT
@@ -44,6 +58,7 @@ for f in "$builds"/*.yaml; do
   if kubeconform \
     -strict \
     -ignore-missing-schemas \
+    -skip "$SKIP_KINDS" \
     -kubernetes-version "$KUBE_VERSION" \
     -schema-location default \
     -schema-location "$CRD_SCHEMAS" \

@@ -117,12 +117,12 @@ the new AMI in the launch templates - so anything the autoscaling groups or
 Karpenter launch from then on boots the new version already - and writes both
 values into `flux-system/cluster-versions`.
 
-This repository does the running fleet. `talos-upgrades` is a chart holding a
-`TalosUpgrade` and a `KubernetesUpgrade`, with the two versions read out of
-that ConfigMap by `valuesFrom`, and tuppr reconciles them: drain, upgrade,
-reboot, verify, one node at a time, one upgrade cluster-wide at a time. It
-drives each node's upgrade from a Job pinned away from that node, so it never
-takes down the node it is running on.
+This repository does the running fleet. `talos-upgrades` is a `TalosUpgrade`
+and a `KubernetesUpgrade` with the two versions substituted in from that
+ConfigMap, and tuppr reconciles them: drain, upgrade, reboot, verify, one node
+at a time, one upgrade cluster-wide at a time. It drives each node's upgrade
+from a Job pinned away from that node, so it never takes down the node it is
+running on.
 
 Nothing here decides *which* version is safe. tuppr upgrades to exactly what
 it is given and does not enforce Talos's supported upgrade path, so stepping
