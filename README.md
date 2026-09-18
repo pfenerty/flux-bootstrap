@@ -103,10 +103,47 @@ declared in the cluster's files, not implied by the directory structure.
 | [metrics-server](https://github.com/kubernetes-sigs/metrics-server) | `kubectl top` and the HorizontalPodAutoscaler. |
 | [AWS EBS CSI driver](https://github.com/kubernetes-sigs/aws-ebs-csi-driver) | Block storage, and the cluster's default StorageClass. |
 | [Karpenter](https://karpenter.sh) | Node autoscaling. The worker autoscaling group is a fixed baseline; everything above it is Karpenter's. |
+| [tuppr](https://github.com/home-operations/tuppr) | Upgrades Talos and Kubernetes in place, node by node. Neither is Terraform's to sequence; see below. |
 
 The Prometheus operator's CRDs are installed here too, ahead of the
 observability layer, because Cilium declares `ServiceMonitor` objects and Helm
 fails a release whose CRD does not exist.
+
+#### Upgrades
+
+A Talos or Kubernetes version bump is one pull request, against the Terraform
+repository, changing `talos_version` or `kubernetes_version`. Applying it puts
+the new AMI in the launch templates - so anything the autoscaling groups or
+Karpenter launch from then on boots the new version already - and writes both
+values into `flux-system/cluster-versions`.
+
+This repository does the running fleet. `talos-upgrades` is a `TalosUpgrade`
+and a `KubernetesUpgrade` with the two versions substituted in from that
+ConfigMap, and tuppr reconciles them: drain, upgrade, reboot, verify, one node
+at a time, one upgrade cluster-wide at a time. It drives each node's upgrade
+from a Job pinned away from that node, so it never takes down the node it is
+running on.
+
+Nothing here decides *which* version is safe. tuppr upgrades to exactly what
+it is given and does not enforce Talos's supported upgrade path, so stepping
+one minor at a time is a review-time obligation on the Terraform pull request.
+
+Two things worth knowing:
+
+* **A green Terraform apply does not mean the cluster has moved.** It returns
+  once the AMI and the ConfigMap are in place. `kubectl get talosupgrade -w`
+  is what says otherwise.
+* **The upgrade Jobs run as their namespace's `default` service account**,
+  which `disallow-default-service-account` reports on. tuppr sets one only on
+  hook Jobs. The policy audits rather than blocks, so nothing breaks, but
+  `tuppr-system` will not go clean for that rule - which matters if you intend
+  to move it to `Enforce`, and the exclusion would have to be deliberate.
+
+`tuppr-system` is deliberately not the upstream quickstart's `system-upgrade`.
+The namespace is the whole of the granularity Talos offers on
+`kubernetesTalosAPIAccess`, the controller's credential is an ordinary Secret
+in it, and `system-upgrade` is a name other operators install into. See
+`docs/hardening.md` in the Terraform repository for what that grant costs.
 
 ### Observability
 

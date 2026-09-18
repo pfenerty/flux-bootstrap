@@ -40,6 +40,17 @@
         "major"
       ],
       "automerge": false
+    },
+    {
+      "description": "tuppr is pre-1.0 and holds os:admin on every node, and a bad release drains and reboots the control plane. Minor bumps are breaking at 0.x; read the changelog",
+      "matchPackageNames": [
+        "tuppr"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "major"
+      ],
+      "automerge": false
     }
   ],
   "customManagers": [
