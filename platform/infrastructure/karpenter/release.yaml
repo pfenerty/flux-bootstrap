@@ -2,15 +2,18 @@
 # exists to run this controller and the rest of the platform; everything
 # above it is provisioned by Karpenter, node by node, from pending pods.
 #
-# Karpenter gets its AWS credentials from two secrets, both written by
-# Terraform under `post_install.extras.karpenter`, because the chart takes
-# the two halves through different mechanisms:
+# Karpenter's configuration arrives from Terraform in two objects, because
+# the chart takes the two halves through different mechanisms:
 #
 #   - `flux-system/karpenter-config` supplies chart values through
 #     `valuesFrom`, which resolves secrets in this HelmRelease's namespace.
-#   - `kube-system/karpenter-aws-credentials` supplies the controller's
+#   - `kube-system/karpenter-aws-config` supplies the controller's
 #     environment through `controller.envFrom`, which resolves in the pod's
 #     namespace instead.
+#
+# Neither carries a credential. The controller assumes a role scoped to its
+# own service account, using the projected token mounted below; the ConfigMap
+# names the role and the token file, and the AWS SDK does the exchange.
 #
 # `clusterEndpoint` is not optional here: Karpenter discovers it by itself
 # only on EKS, and this is not EKS - `settings.eksControlPlane` stays false.
@@ -53,13 +56,29 @@ spec:
     replicas: 1
     controller:
       envFrom:
-        - secretRef:
-            name: karpenter-aws-credentials
+        - configMapRef:
+            name: karpenter-aws-config
+      extraVolumeMounts:
+        # Terraform writes this path into AWS_WEB_IDENTITY_TOKEN_FILE. The two
+        # have to agree and nothing checks that they do.
+        - name: aws-token
+          mountPath: /var/run/secrets/aws
+          readOnly: true
       resources:
         requests:
           cpu: 200m
           memory: 512Mi
         limits:
           memory: 512Mi
+    extraVolumes:
+      # `audience` is not optional: AWS refuses a token minted for anything
+      # other than sts.amazonaws.com.
+      - name: aws-token
+        projected:
+          sources:
+            - serviceAccountToken:
+                path: token
+                audience: sts.amazonaws.com
+                expirationSeconds: 3600
     serviceMonitor:
       enabled: true

@@ -23,16 +23,46 @@ Cilium is the one component this repository takes over rather than installs.
 
 What it inherits, and what it must not break:
 
-| Secret | Namespace | Read by |
+| Object | Namespace | Read by |
 |---|---|---|
-| `cilium-config` | `flux-system` | Cilium, for the strict-mode encryption CIDR. It has to match the pod CIDR the machine configs were generated with. |
-| `karpenter-config` | `flux-system` | Karpenter's `HelmRelease`, and the `EC2NodeClass` and `NodePool` chart |
-| `karpenter-aws-credentials` | `kube-system` | The Karpenter controller's environment |
-| `aws-secret` | `kube-system` | The EBS CSI driver |
-| `hubble-trust-anchor` | `kube-system` | cert-manager, as the CA the Hubble `Issuer` signs from |
+| `cilium-config` secret | `flux-system` | Cilium, for the strict-mode encryption CIDR. It has to match the pod CIDR the machine configs were generated with. |
+| `karpenter-config` secret | `flux-system` | Karpenter's `HelmRelease`, and the `EC2NodeClass` and `NodePool` chart |
+| `hubble-trust-anchor` secret | `kube-system` | cert-manager, as the CA the Hubble `Issuer` signs from |
+| `cloud-controller-manager-aws-config` ConfigMap | `kube-system` | The cloud controller manager, as its `--cloud-config` and its AWS shared config |
+| `ebs-csi-driver-aws-config` ConfigMap | `kube-system` | The EBS CSI controller's environment |
+| `karpenter-aws-config` ConfigMap | `kube-system` | The Karpenter controller's environment |
 
 `aws-loadbalancer-config` is also written by Terraform and read by nothing
 here.
+
+## AWS credentials, or the absence of them
+
+Nothing here holds an AWS key pair. The cloud controller manager, the EBS CSI
+driver and Karpenter each assume an IAM role by presenting a service account
+token the cluster signed - IRSA, against an OpenID Connect provider Terraform
+registers from the cluster's own discovery documents.
+
+Each of the three gets the same two things:
+
+* a projected `serviceAccountToken` volume, mounted at
+  `/var/run/secrets/aws/token`, with `audience: sts.amazonaws.com` - which is
+  not optional, and is what stops a token minted for the API server being
+  replayed against IAM;
+* the role ARN and that token path, from the ConfigMap Terraform writes,
+  because both are specific to one cluster and nothing under `platform/` is.
+
+The token path appears in both repositories and nothing checks that the two
+agree. A mismatch fails at `AssumeRoleWithWebIdentity`, in the workload's
+logs.
+
+**No pod can read the instance metadata service.** The nodes' launch templates
+set an IMDS hop limit of 1, which is what makes a role scoped to one service
+account mean anything - otherwise any pod could ask metadata for the node's
+credentials instead. Two consequences show up here: the cloud controller
+manager is given its region and VPC in a cloud config file rather than
+discovering them, and the EBS CSI node plugin is set to read its instance
+facts from the Kubernetes API. Anything added later that expects IMDS will not
+work.
 
 ## Layout
 

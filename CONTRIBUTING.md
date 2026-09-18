@@ -81,9 +81,14 @@ Prometheus, Grafana and Loki volumes are `Delete` reclaim policy.
 
 Several things here only work because of a decision in
 [pfenerty/talos-aws-terraform](https://github.com/pfenerty/talos-aws-terraform):
-the secrets, the sync path, the Flux toleration patch, the bootstrap Cilium
-release this repository adopts, and `registerWithFQDN` on the kubelet, without
-which the cloud controller cannot find a node's instance. A change here that
-needs one of those changed is a change to both repositories, and
-`docs/hardening.md` there is where the obligations of this one are written
-down.
+the secrets and ConfigMaps, the sync path, the Flux toleration patch, the
+bootstrap Cilium release this repository adopts, `registerWithFQDN` on the
+kubelet, without which the cloud controller cannot find a node's instance, and
+the IMDS hop limit of 1, which is why no workload here may expect to reach the
+metadata service. A change here that needs one of those changed is a change to
+both repositories, and `docs/hardening.md` there is where the obligations of
+this one are written down.
+
+The IRSA token path, `/var/run/secrets/aws/token`, is written into Terraform's
+ConfigMaps and mounted by the releases here. Change it in one place and
+nothing fails until a controller asks for credentials.
