@@ -1,0 +1,40 @@
+# What the cluster should be running, as two resources tuppr reconciles.
+#
+# Delivered as a Helm release of a chart in this repository for the same
+# reason karpenter-nodes is: both versions are cluster values that live in
+# Terraform - in `flux-system/cluster-versions`, written from the same
+# `talos_version` and `kubernetes_version` that select the node AMI and render
+# the machine config - and `valuesFrom` with a `targetPath` is how a value
+# gets from a ConfigMap into a specific field. Flux's `postBuild` substitution
+# would also work for two scalars, but it is a plain string replace applied to
+# every manifest the Kustomization renders, and nothing else here uses it.
+#
+# `reconcileStrategy: Revision` is what makes edits to the chart take effect:
+# its version is static, so without it a change to the templates would never
+# be rolled out.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: talos-upgrades
+  namespace: flux-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: ./charts/talos-upgrades
+      reconcileStrategy: Revision
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+  # Both resources are cluster-scoped, so this only decides where Helm records
+  # the release.
+  targetNamespace: tuppr-system
+  valuesFrom:
+    - kind: ConfigMap
+      name: cluster-versions
+      valuesKey: talos_version
+      targetPath: talosVersion
+    - kind: ConfigMap
+      name: cluster-versions
+      valuesKey: kubernetes_version
+      targetPath: kubernetesVersion

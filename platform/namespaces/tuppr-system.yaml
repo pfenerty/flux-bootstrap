@@ -1,0 +1,21 @@
+# tuppr and nothing else. The namespace is the unit of granularity Talos
+# offers on `kubernetesTalosAPIAccess` - there is no service account or pod
+# selector - so every workload placed here can obtain a Talos API credential
+# with the roles the machine config allows, which is `os:admin`. The
+# conventional `system-upgrade` is deliberately not used: other operators
+# install into it, and each one that did would inherit that.
+#
+# `restricted` because tuppr's controller and the per-node upgrade Jobs it
+# creates all run as non-root 65532 with a RuntimeDefault seccomp profile, no
+# privilege escalation, a read-only root filesystem and every capability
+# dropped. Nothing here needs host access: the upgrade is an API call, and the
+# node performs it itself.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tuppr-system
+  labels:
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted

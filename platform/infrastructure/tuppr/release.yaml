@@ -1,0 +1,57 @@
+# The controller that upgrades Talos and Kubernetes in place.
+#
+# It exists because neither upgrade is Terraform's to sequence. An OS upgrade
+# has to go node by node - drain, upgrade, reboot, wait for healthy, next -
+# and Terraform creates resources in parallel with no way to express that
+# order. So Terraform owns the AMI new nodes boot from and the versions the
+# cluster should be on, and this reconciles the running fleet to them.
+#
+# It never upgrades the node it is running on: each node's upgrade is a Job
+# with a required anti-affinity away from that node, and the Talos API call
+# it makes tells the node to upgrade itself, so the controller being evicted
+# mid-drain does not interrupt anything. Its client pins the Talos endpoints
+# to control plane addresses rather than resolving through cluster DNS, which
+# is what keeps it working while CoreDNS is being drained.
+#
+# `tuppr-system` rather than the upstream quickstart's `system-upgrade`: the
+# namespace is what Terraform's `kubernetes_talos_api_access` grants `os:admin`
+# to, and that grant is only as narrow as the namespace is exclusive. The
+# chart creates a `talos.dev/v1alpha1` ServiceAccount here, which makes Talos
+# mint a talosconfig into a Secret in this namespace - so anything that could
+# read Secrets here would hold `os:admin` on every node.
+#
+# `crds: CreateReplace` on upgrade because the chart ships its CRDs in
+# `crds/`, which Helm installs once and never updates. The TalosUpgrade and
+# KubernetesUpgrade schemas move between releases of a 0.x controller.
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: tuppr
+  namespace: flux-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: tuppr
+      version: 0.5.6
+      sourceRef:
+        kind: HelmRepository
+        name: tuppr
+  targetNamespace: tuppr-system
+  install:
+    crds: Create
+  upgrade:
+    crds: CreateReplace
+  values:
+    # One replica. The chart leader-elects, so a second is standby rather than
+    # capacity, and only one upgrade runs cluster-wide at a time regardless.
+    replicaCount: 1
+    resources:
+      requests:
+        cpu: 10m
+        memory: 128Mi
+      limits:
+        memory: 256Mi
+    monitoring:
+      serviceMonitor:
+        enabled: true

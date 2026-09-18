@@ -4,3 +4,4 @@ resources:
   - cert-manager.yaml
   - kyverno.yaml
   - observability.yaml
+  - tuppr-system.yaml

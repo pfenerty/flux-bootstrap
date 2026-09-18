@@ -41,6 +41,7 @@ api_versions=(--api-versions monitoring.coreos.com/v1)
 
 declare -A stub=(
   [karpenter]="--set settings.clusterName=example --set settings.clusterEndpoint=https://example.invalid:6443"
+  [talos-upgrades]="--set talosVersion=v0.0.0 --set kubernetesVersion=v0.0.0"
 )
 
 for name in "${!repo_url[@]}"; do

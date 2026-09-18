@@ -9,6 +9,11 @@
 # issued by it. The Prometheus CRDs sit alongside because half of these charts
 # declare a ServiceMonitor and Helm fails a release whose CRD is missing.
 #
+# Two of these install a controller and then the custom resources it acts on,
+# which is why `karpenter` and `karpenter-nodes`, and `tuppr` and
+# `talos-upgrades`, are separate Kustomizations rather than one each: the CRDs
+# have to be registered before an instance of them will apply.
+#
 # Health checks are on the HelmRelease rather than on the Deployments it
 # produces. A HelmRelease goes Ready when Helm's own wait has seen the
 # release's workloads become available, so it means the same thing without
@@ -226,6 +231,57 @@ spec:
     - apiVersion: helm.toolkit.fluxcd.io/v2
       kind: HelmRelease
       name: karpenter
+      namespace: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: tuppr
+  namespace: flux-system
+spec:
+  interval: 30m
+  retryInterval: 1m
+  timeout: 10m
+  prune: true
+  path: ./platform/infrastructure/tuppr
+  # The controller reaches the Talos API with a credential Talos mints into
+  # its namespace, which only exists if the namespace is there first and if
+  # the machine config names it - `kubernetes_talos_api_access` in Terraform.
+  dependsOn:
+    - name: platform-namespaces
+    - name: prometheus-operator-crds
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: tuppr
+      namespace: flux-system
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: talos-upgrades
+  namespace: flux-system
+spec:
+  interval: 30m
+  retryInterval: 1m
+  timeout: 10m
+  prune: true
+  path: ./platform/infrastructure/talos-upgrades
+  # The TalosUpgrade and KubernetesUpgrade are instances of CRDs the tuppr
+  # chart installs, so the controller's release has to exist first - the same
+  # relationship karpenter-nodes has to karpenter.
+  dependsOn:
+    - name: tuppr
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: helm.toolkit.fluxcd.io/v2
+      kind: HelmRelease
+      name: talos-upgrades
       namespace: flux-system
 ---
 apiVersion: kustomize.toolkit.fluxcd.io/v1
